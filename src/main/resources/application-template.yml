@@ -1,0 +1,45 @@
+server:
+  port: 18081
+
+logging:
+  level:
+    root: info
+    com:
+      herbertgao:
+        telegram:
+          business:
+            service: debug
+          bot: debug
+spring:
+  datasource:
+    druid:
+      url: jdbc:mysql://localhost:3306/gaokao?useUnicode=true&characterEncoding=utf-8&autoReconnect=true
+      username: root
+      password: root
+      driver-class-name: com.mysql.jdbc.Driver
+      filters: config
+      max-wait: 10000
+      max-active: 5
+      test-on-borrow: true
+      validation-query: SELECT 1
+      validation-query-timeout: 30000
+
+telegram:
+  bot:
+    username:
+    token:
+  channel:
+    id:
+
+xxl:
+  job:
+    admin:
+      addresses: http://127.0.0.1:8070/xxl-job-admin/
+    executor:
+      appname: example
+      address:
+      ip:
+      port: 19082
+      logpath: /opt/logs/xxl-job.log
+      logretentiondays: 7
+    accessToken:
