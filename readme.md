@@ -5,6 +5,9 @@
         http://t.me/gaokao_bot
         <br>
         <br>
+        <a href="https://github.com/HerbertGao/gaokao_bot/actions">
+         <img src="https://github.com/HerbertGao/gaokao_bot/workflows/Java%20CI%20with%20Gradle/badge.svg" >
+        </a>
         <a href="https://github.com/HerbertGao/gaokao_bot/releases">
          <img src="https://img.shields.io/github/release/HerbertGao/gaokao_bot" >
         </a>
