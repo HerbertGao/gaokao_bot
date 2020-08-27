@@ -1,0 +1,7 @@
+.gradle/
+.idea/
+build
+MybatisGenerator.xml
+gradle/
+/src/main/resources/application-dev.yml
+/src/main/resources/application-online.yml
