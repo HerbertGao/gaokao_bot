@@ -29,7 +29,7 @@ Bot 同时集成了 XXL-JOB 框架，可实现定时向指定会话发送倒计�
 - [rubenlagus / TelegramBots](https://github.com/rubenlagus/TelegramBots)
 - [xuxueli / xxl-job](https://github.com/xuxueli/xxl-job)
 
-## LICENSE
+## License
 MIT License
 
 Copyright (c) 2020 HerbertGao
