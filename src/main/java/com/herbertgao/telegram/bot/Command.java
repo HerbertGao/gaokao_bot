@@ -8,6 +8,8 @@ package com.herbertgao.telegram.bot;
  **/
 public interface Command {
 
+    String COMMAND_REGEX = "^/[a-zA-Z]+";
+
     String COUNTDOWN_COMMAND = "/d";
     String LIST_COMMAND = "/ls";
     String ADD_COMMAND = "/add";

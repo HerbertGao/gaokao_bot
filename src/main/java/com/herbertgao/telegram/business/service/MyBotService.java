@@ -66,7 +66,7 @@ public class MyBotService {
 
             if (message.isCommand()) {
 
-                if (text.startsWith(Command.COUNTDOWN_COMMAND)) {
+                if (TelegramBotUtil.isMatchCommand(text, Command.COUNTDOWN_COMMAND)) {
                     String msg = messageService.getCountDownCommandMessage();
 
                     try {
@@ -74,7 +74,7 @@ public class MyBotService {
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
-                } else if (text.startsWith(Command.LIST_COMMAND)) {
+                } else if (TelegramBotUtil.isMatchCommand(text, Command.LIST_COMMAND)) {
                     String msg = messageService.getListCommandMessage(message);
 
                     try {
@@ -82,7 +82,7 @@ public class MyBotService {
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
-                } else if (text.startsWith(Command.ADD_COMMAND)) {
+                } else if (TelegramBotUtil.isMatchCommand(text, Command.ADD_COMMAND)) {
                     String msg = messageService.getAddCommandMessage(message);
 
                     try {
@@ -90,7 +90,7 @@ public class MyBotService {
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
-                } else if (text.startsWith(Command.REMOVE_COMMAND)) {
+                } else if (TelegramBotUtil.isMatchCommand(text, Command.REMOVE_COMMAND)) {
                     String msg = messageService.getRemoveCommandMessage(message);
 
                     try {
@@ -98,7 +98,7 @@ public class MyBotService {
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
-                } else if (text.startsWith(Command.CUSTOMIZE_COMMAND)) {
+                } else if (TelegramBotUtil.isMatchCommand(text, Command.CUSTOMIZE_COMMAND)) {
                     String msg = messageService.getCustomizeCommandMessage(message);
 
                     try {
@@ -106,7 +106,7 @@ public class MyBotService {
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
-                } else if (text.startsWith(Command.RENAME_COMMAND)) {
+                } else if (TelegramBotUtil.isMatchCommand(text, Command.RENAME_COMMAND)) {
                     String msg = messageService.getRenameCommandMessage(message);
 
                     try {

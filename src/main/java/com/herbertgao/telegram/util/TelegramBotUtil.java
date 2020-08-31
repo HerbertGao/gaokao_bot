@@ -1,5 +1,7 @@
 package com.herbertgao.telegram.util;
 
+import cn.hutool.core.util.ReUtil;
+import com.herbertgao.telegram.bot.Command;
 import com.herbertgao.telegram.bot.Config;
 import org.apache.commons.lang3.StringUtils;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -11,6 +13,10 @@ import org.telegram.telegrambots.meta.api.objects.Message;
  * @create: 2020/7/27 13:27
  **/
 public class TelegramBotUtil {
+
+    public static Boolean isMatchCommand(String text, String command) {
+        return command.equals(ReUtil.get(Command.COMMAND_REGEX, text, 0));
+    }
 
     /**
      * 获取消息文字，删除命令、@信息
