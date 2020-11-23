@@ -38,9 +38,19 @@ public class InlineQueryService {
         List<InlineQueryResult> resultList = new ArrayList<>();
 
         Integer userId = inlineQuery.getFrom().getId();
+        String query = inlineQuery.getQuery();
         LocalDateTime now = LocalDateTime.now().withNano(0);
+        List<ExamDate> examList = new ArrayList<>();
 
-        List<ExamDate> examList = examDateService.getExamList(now, false);
+        if (StringUtils.isNotBlank(query)) {
+            if (StringUtils.isNumeric(query)) {
+                Integer year = Integer.valueOf(query);
+                examList = examDateService.getExamByYear(year);
+            }
+        } else {
+            examList = examDateService.getExamList(now, false);
+        }
+
         UserTemplate defaultTemplate = userTemplateService.getDefaultTemplate();
         List<UserTemplate> templateList = userTemplateService.getUserTemplateListByUserId(userId);
 
@@ -53,7 +63,11 @@ public class InlineQueryService {
             InlineQueryResultArticle r = new InlineQueryResultArticle();
             r.setId(IdUtil.getId().toString());
             r.setTitle(defaultTitle);
-            r.setInputMessageContent(new InputTextMessageContent().setMessageText(defaultMessage));
+            r.setInputMessageContent(new InputTextMessageContent() {
+                {
+                    setMessageText(defaultMessage);
+                }
+            });
             resultList.add(r);
 
             templateList.forEach(template -> {
@@ -65,7 +79,11 @@ public class InlineQueryService {
                 InlineQueryResultArticle ru = new InlineQueryResultArticle();
                 ru.setId(IdUtil.getId().toString());
                 ru.setTitle(title);
-                ru.setInputMessageContent(new InputTextMessageContent().setMessageText(message));
+                ru.setInputMessageContent(new InputTextMessageContent() {
+                    {
+                        setMessageText(message);
+                    }
+                });
                 resultList.add(ru);
             });
         }

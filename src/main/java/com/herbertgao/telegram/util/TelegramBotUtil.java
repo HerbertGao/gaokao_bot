@@ -26,11 +26,16 @@ public class TelegramBotUtil {
      * @return
      */
     public static String getTextByMessage(Message message, String command) {
-        String text = message.getText().replaceFirst("@" + Config.getUsername(), "");
-        if (StringUtils.isNotBlank(command)) {
-            text = text.replaceFirst(command, "").trim();
+        String text = message.getText();
+        if (StringUtils.isNotBlank(text)) {
+            text = text.replaceFirst("@" + Config.getUsername(), "");
+            if (StringUtils.isNotBlank(command)) {
+                text = text.replaceFirst(command, "").trim();
+            }
+            return text;
+        } else {
+            return null;
         }
-        return text;
     }
 
     /**

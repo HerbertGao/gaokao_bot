@@ -1,7 +1,6 @@
 package com.herbertgao.telegram.business.service;
 
 import com.herbertgao.telegram.bot.Command;
-import com.herbertgao.telegram.bot.Config;
 import com.herbertgao.telegram.util.TelegramBotUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,7 @@ public class MyBotService {
     public void message(Message message) {
         logger.debug(message.toString());
 
-        Long chatId = message.getChatId();
+        String chatId = message.getChatId().toString();
         User user = message.getFrom();
 
         if (message.hasText()) {
@@ -67,10 +66,15 @@ public class MyBotService {
             if (message.isCommand()) {
 
                 if (TelegramBotUtil.isMatchCommand(text, Command.COUNTDOWN_COMMAND)) {
-                    String msg = messageService.getCountDownCommandMessage();
+                    String msg = messageService.getCountDownCommandMessage(message);
 
                     try {
-                        absSender.execute(new SendMessage(chatId, msg).enableHtml(true).setReplyToMessageId(message.getMessageId()));
+                        absSender.execute(new SendMessage(chatId, msg) {
+                            {
+                                enableHtml(true);
+                                setReplyToMessageId(message.getMessageId());
+                            }
+                        });
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
@@ -78,7 +82,12 @@ public class MyBotService {
                     String msg = messageService.getListCommandMessage(message);
 
                     try {
-                        absSender.execute(new SendMessage(chatId, msg).enableHtml(true).enableHtml(true).setReplyToMessageId(message.getMessageId()));
+                        absSender.execute(new SendMessage(chatId, msg) {
+                            {
+                                enableHtml(true);
+                                setReplyToMessageId(message.getMessageId());
+                            }
+                        });
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
@@ -86,7 +95,12 @@ public class MyBotService {
                     String msg = messageService.getAddCommandMessage(message);
 
                     try {
-                        absSender.execute(new SendMessage(chatId, msg).enableHtml(true).setReplyToMessageId(message.getMessageId()));
+                        absSender.execute(new SendMessage(chatId, msg) {
+                            {
+                                enableHtml(true);
+                                setReplyToMessageId(message.getMessageId());
+                            }
+                        });
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
@@ -94,7 +108,12 @@ public class MyBotService {
                     String msg = messageService.getRemoveCommandMessage(message);
 
                     try {
-                        absSender.execute(new SendMessage(chatId, msg).enableHtml(true).setReplyToMessageId(message.getMessageId()));
+                        absSender.execute(new SendMessage(chatId, msg) {
+                            {
+                                enableHtml(true);
+                                setReplyToMessageId(message.getMessageId());
+                            }
+                        });
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
@@ -102,7 +121,12 @@ public class MyBotService {
                     String msg = messageService.getCustomizeCommandMessage(message);
 
                     try {
-                        absSender.execute(new SendMessage(chatId, msg).enableHtml(true).setReplyToMessageId(message.getMessageId()));
+                        absSender.execute(new SendMessage(chatId, msg) {
+                            {
+                                enableHtml(true);
+                                setReplyToMessageId(message.getMessageId());
+                            }
+                        });
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
@@ -110,7 +134,12 @@ public class MyBotService {
                     String msg = messageService.getRenameCommandMessage(message);
 
                     try {
-                        absSender.execute(new SendMessage(chatId, msg).enableHtml(true).setReplyToMessageId(message.getMessageId()));
+                        absSender.execute(new SendMessage(chatId, msg) {
+                            {
+                                enableHtml(true);
+                                setReplyToMessageId(message.getMessageId());
+                            }
+                        });
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }

@@ -23,7 +23,6 @@ public class ExamDateService {
 
     /**
      * @param now
-     *
      * @return
      */
     public List<ExamDate> getExamList(LocalDateTime now, boolean desc) {
@@ -38,4 +37,15 @@ public class ExamDateService {
         return mapper.selectByExample(queryExample);
     }
 
+    /**
+     * @param year
+     * @return
+     */
+    public List<ExamDate> getExamByYear(Integer year) {
+        ExamDateExample queryExample = new ExamDateExample();
+        queryExample.createCriteria()
+                .andExamYearEqualTo(year)
+                .andIsDeleteEqualTo(false);
+        return mapper.selectByExample(queryExample);
+    }
 }

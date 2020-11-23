@@ -8,9 +8,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
-import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 /**
  * @program: gaokao_bot
@@ -28,15 +28,14 @@ public class Main implements ApplicationRunner {
     private MyBot bot;
 
     public static void main(String[] args) {
-        ApiContextInitializer.init();
         SpringApplication.run(Main.class, args);
     }
 
     @Override
     public void run(ApplicationArguments args) {
-        TelegramBotsApi botsApi = new TelegramBotsApi();
-
         try {
+            TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
+
             botsApi.registerBot(bot);
         } catch (TelegramApiException e) {
             e.printStackTrace();

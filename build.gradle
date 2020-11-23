@@ -44,7 +44,7 @@ dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 
     // https://mvnrepository.com/artifact/org.telegram/telegrambots
-    implementation group: 'org.telegram', name: 'telegrambots', version: '4.9'
+    implementation group: 'org.telegram', name: 'telegrambots', version: '5.0.1'
 
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-parent', version: '2.2.6.RELEASE', ext: 'pom'
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-logging', version: '2.2.6.RELEASE'

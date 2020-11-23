@@ -26,8 +26,20 @@ public class GaokaoBotUtil {
      */
     public static Boolean isExamTime(ExamDate exam, LocalDateTime now) {
         LocalDateTime examBeginDate = exam.getExamBeginDate();
-        return examBeginDate.isBefore(now) || examBeginDate.isEqual(now);
+        LocalDateTime examEndDate = exam.getExamEndDate();
+        return (examBeginDate.isBefore(now) || examBeginDate.isEqual(now)) && (examEndDate.isAfter(now) || examEndDate.isEqual(now));
     }
+
+	/**
+	 * 是考试时间
+	 *
+	 * @param now
+	 * @return
+	 */
+	public static Boolean isExpiredExam(ExamDate exam, LocalDateTime now) {
+		LocalDateTime examEndDate = exam.getExamEndDate();
+		return  examEndDate.isBefore(now);
+	}
 
     /**
      * 获取倒计时文字
@@ -40,6 +52,8 @@ public class GaokaoBotUtil {
     public static String getCountDownString(ExamDate exam, LocalDateTime now, String template) {
         if (isExamTime(exam, now)) {
             return exam.getExamDesc() + "正在进行中！" + System.getProperty("line.separator");
+        } else if (isExpiredExam(exam, now)) {
+	        return exam.getExamDesc() + "已经结束了。" + System.getProperty("line.separator");
         } else {
             String rtn = template;
             String[] searchList = {

@@ -17,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,11 +49,25 @@ public class MessageService {
     };
 
     /**
+     * @param message
      * @return
      */
-    String getCountDownCommandMessage() {
+    String getCountDownCommandMessage(Message message) {
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<ExamDate> examList = examDateService.getExamList(now, false);
+        List<ExamDate> examList = new ArrayList<>();
+        String text = TelegramBotUtil.getTextByMessage(message, Command.COUNTDOWN_COMMAND);
+        if (StringUtils.isNotBlank(text)) {
+            if (StringUtils.isNumeric(text)) {
+                Integer year = Integer.valueOf(text);
+                examList = examDateService.getExamByYear(year);
+            }
+            if (examList.size() == 0) {
+                return "参数暂时无法识别。";
+            }
+        } else {
+            examList = examDateService.getExamList(now, false);
+        }
+
         UserTemplate template = userTemplateService.getDefaultTemplate();
 
         if (examList.size() > 0) {
