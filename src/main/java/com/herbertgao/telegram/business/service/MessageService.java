@@ -85,7 +85,7 @@ public class MessageService {
      */
     String getListCommandMessage(Message message) {
         if (TelegramBotUtil.isUserChat(message)) {
-            Integer userId = message.getFrom().getId();
+            Long userId = message.getFrom().getId();
             List<UserTemplate> userTemplateList = userTemplateService.getUserTemplateListByUserId(userId);
 
             StringBuilder sb = new StringBuilder();
@@ -124,7 +124,7 @@ public class MessageService {
      */
     String getAddCommandMessage(Message message) {
         if (TelegramBotUtil.isUserChat(message)) {
-            Integer userId = message.getFrom().getId();
+            Long userId = message.getFrom().getId();
             String text = TelegramBotUtil.getTextByMessage(message, Command.ADD_COMMAND);
             text = TelegramBotUtil.removeFirst(text, "@");
 
@@ -152,7 +152,7 @@ public class MessageService {
      */
     String getRemoveCommandMessage(Message message) {
         if (TelegramBotUtil.isUserChat(message)) {
-            Integer userId = message.getFrom().getId();
+            Long userId = message.getFrom().getId();
             String text = TelegramBotUtil.getTextByMessage(message, Command.REMOVE_COMMAND);
             text = TelegramBotUtil.removeFirst(text, "_");
             text = TelegramBotUtil.removeFirst(text, "@");
@@ -177,7 +177,7 @@ public class MessageService {
      */
     public String getCustomizeCommandMessage(Message message) {
         if (TelegramBotUtil.isUserChat(message)) {
-            Integer userId = message.getFrom().getId();
+            Long userId = message.getFrom().getId();
             String text = TelegramBotUtil.getTextByMessage(message, Command.CUSTOMIZE_COMMAND);
 
             if (text.length() > TEMPLATE_MAX_LENGTH) {
@@ -242,7 +242,7 @@ public class MessageService {
 
     public String getRenameCommandMessage(Message message) {
         if (TelegramBotUtil.isUserChat(message)) {
-            Integer userId = message.getFrom().getId();
+            Long userId = message.getFrom().getId();
             String text = TelegramBotUtil.getTextByMessage(message, Command.RENAME_COMMAND);
 
             try {

@@ -1,7 +1,7 @@
 package com.herbertgao.telegram.database.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.herbertgao.telegram.database.entity.UserTemplate;
-import com.herbertgao.telegram.database.entity.UserTemplateExample;
 import com.herbertgao.telegram.database.mapper.UserTemplateMapper;
 import com.herbertgao.telegram.util.IdUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,18 +27,18 @@ public class UserTemplateService {
      * @param userId
      * @return
      */
-    public List<UserTemplate> getUserTemplateListByUserId(Integer userId) {
-        UserTemplateExample example = new UserTemplateExample();
-        example.createCriteria()
-                .andUserIdEqualTo(userId);
-        return mapper.selectByExample(example);
+    public List<UserTemplate> getUserTemplateListByUserId(Long userId) {
+        QueryWrapper<UserTemplate> wrapper = new QueryWrapper<>();
+        wrapper.lambda()
+                .eq(UserTemplate::getUserId, userId);
+        return mapper.selectList(wrapper);
     }
 
     /**
      * @param userId
      * @param examUsername
      */
-    public Long insertDefaultTemplateWithUsername(Integer userId, String examUsername) {
+    public Long insertDefaultTemplateWithUsername(Long userId, String examUsername) {
         UserTemplate defaultTemplate = getDefaultTemplate();
         UserTemplate userTemplate = new UserTemplate();
         Long id = IdUtil.getId();
@@ -54,7 +54,7 @@ public class UserTemplateService {
      * @param userId
      * @param template
      */
-    public Long insertTemplateWithUsername(Integer userId, String template, String templateName) {
+    public Long insertTemplateWithUsername(Long userId, String template, String templateName) {
         UserTemplate userTemplate = new UserTemplate();
         Long id = IdUtil.getId();
         userTemplate.setId(id);
@@ -71,7 +71,7 @@ public class UserTemplateService {
      * @return
      */
     public UserTemplate getDefaultTemplate() {
-        return getUserTemplateListByUserId(0).get(0);
+        return getUserTemplateListByUserId(0L).get(0);
     }
 
     /**
@@ -79,38 +79,30 @@ public class UserTemplateService {
      * @param id
      * @return
      */
-    public UserTemplate getTemplateById(Integer userId, String id) {
-        UserTemplateExample example = new UserTemplateExample();
-        example.createCriteria()
-                .andIdEqualTo(Long.parseLong(id))
-                .andUserIdEqualTo(userId);
-        List<UserTemplate> templateList = mapper.selectByExample(example);
-        if (templateList.size() > 0) {
-            return mapper.selectByExample(example).get(0);
-        } else {
-            return null;
-        }
+    public UserTemplate getTemplateById(Long userId, String id) {
+        QueryWrapper<UserTemplate> wrapper = new QueryWrapper<>();
+        wrapper.lambda()
+                .eq(UserTemplate::getId, Long.parseLong(id))
+                .eq(UserTemplate::getUserId, userId);
+        return mapper.selectOne(wrapper);
     }
 
     /**
      * @param userId
      * @param id
      */
-    public void remove(Integer userId, String id) {
-        UserTemplateExample example = new UserTemplateExample();
-        example.createCriteria()
-                .andIdEqualTo(Long.parseLong(id))
-                .andUserIdEqualTo(userId);
-        List<UserTemplate> templateList = mapper.selectByExample(example);
-        if (templateList.size() > 0) {
-            mapper.deleteByExample(example);
-        }
+    public void remove(Long userId, String id) {
+        QueryWrapper<UserTemplate> wrapper = new QueryWrapper<>();
+        wrapper.lambda()
+                .eq(UserTemplate::getId, Long.parseLong(id))
+                .eq(UserTemplate::getUserId, userId);
+        mapper.delete(wrapper);
     }
 
     /**
      * @param template
      */
     public void update(UserTemplate template) {
-        mapper.updateByPrimaryKey(template);
+        mapper.updateById(template);
     }
 }

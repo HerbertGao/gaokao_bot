@@ -37,7 +37,7 @@ public class InlineQueryService {
 
         List<InlineQueryResult> resultList = new ArrayList<>();
 
-        Integer userId = inlineQuery.getFrom().getId();
+        Long userId = inlineQuery.getFrom().getId();
         String query = inlineQuery.getQuery();
         LocalDateTime now = LocalDateTime.now().withNano(0);
         List<ExamDate> examList = new ArrayList<>();

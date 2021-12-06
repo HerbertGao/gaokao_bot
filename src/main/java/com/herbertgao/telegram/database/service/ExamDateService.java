@@ -1,7 +1,7 @@
 package com.herbertgao.telegram.database.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.herbertgao.telegram.database.entity.ExamDate;
-import com.herbertgao.telegram.database.entity.ExamDateExample;
 import com.herbertgao.telegram.database.mapper.ExamDateMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,15 +26,15 @@ public class ExamDateService {
      * @return
      */
     public List<ExamDate> getExamList(LocalDateTime now, boolean desc) {
-        ExamDateExample queryExample = new ExamDateExample();
-        queryExample.createCriteria()
-                .andExamYearBeginDateLessThanOrEqualTo(now)
-                .andExamYearEndDateGreaterThanOrEqualTo(now)
-                .andIsDeleteEqualTo(false);
+        QueryWrapper<ExamDate> wrapper = new QueryWrapper<>();
+        wrapper.lambda()
+                .le(ExamDate::getExamYearBeginDate, now)
+                .ge(ExamDate::getExamYearEndDate, now)
+                .eq(ExamDate::getIsDelete, false);
         if (desc) {
-            queryExample.setOrderByClause(" exam_year_begin_date desc ");
+            wrapper.lambda().orderByDesc(ExamDate::getExamYearBeginDate);
         }
-        return mapper.selectByExample(queryExample);
+        return mapper.selectList(wrapper);
     }
 
     /**
@@ -42,10 +42,10 @@ public class ExamDateService {
      * @return
      */
     public List<ExamDate> getExamByYear(Integer year) {
-        ExamDateExample queryExample = new ExamDateExample();
-        queryExample.createCriteria()
-                .andExamYearEqualTo(year)
-                .andIsDeleteEqualTo(false);
-        return mapper.selectByExample(queryExample);
+        QueryWrapper<ExamDate> wrapper = new QueryWrapper<>();
+        wrapper.lambda()
+                .eq(ExamDate::getExamYear, year)
+                .eq(ExamDate::getIsDelete, false);
+        return mapper.selectList(wrapper);
     }
 }

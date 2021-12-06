@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.herbertgao.telegram.database.mapper.ExamDateMapper">
+  <resultMap id="BaseResultMap" type="com.herbertgao.telegram.database.entity.ExamDate">
+    <!--@mbg.generated-->
+    <!--@Table exam_date-->
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="exam_year" jdbcType="INTEGER" property="examYear" />
+    <result column="exam_desc" jdbcType="VARCHAR" property="examDesc" />
+    <result column="short_desc" jdbcType="VARCHAR" property="shortDesc" />
+    <result column="exam_begin_date" jdbcType="TIMESTAMP" property="examBeginDate" />
+    <result column="exam_end_date" jdbcType="TIMESTAMP" property="examEndDate" />
+    <result column="exam_year_begin_date" jdbcType="TIMESTAMP" property="examYearBeginDate" />
+    <result column="exam_year_end_date" jdbcType="TIMESTAMP" property="examYearEndDate" />
+    <result column="is_delete" jdbcType="BOOLEAN" property="isDelete" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, exam_year, exam_desc, short_desc, exam_begin_date, exam_end_date, exam_year_begin_date, 
+    exam_year_end_date, is_delete
+  </sql>
+</mapper>

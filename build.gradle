@@ -51,8 +51,13 @@ dependencies {
     implementation group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '2.2.6.RELEASE'
     annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: '2.2.6.RELEASE'
 
-    implementation group: 'org.mybatis', name: 'mybatis', version: '3.5.4'
-    implementation group: 'org.mybatis.spring.boot', name: 'mybatis-spring-boot-starter', version: '2.1.2'
+    // https://mvnrepository.com/artifact/org.projectlombok/lombok
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
+    testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
+    testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
+
+    implementation group: 'com.baomidou', name: 'mybatis-plus-boot-starter', version: '3.4.3.4'
     implementation group: 'mysql', name: 'mysql-connector-java', version: '5.1.45'
     // https://mvnrepository.com/artifact/com.alibaba/druid-spring-boot-starter
     implementation group: 'com.alibaba', name: 'druid-spring-boot-starter', version: '1.1.23'
