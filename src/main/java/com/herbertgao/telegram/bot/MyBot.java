@@ -1,8 +1,7 @@
 package com.herbertgao.telegram.bot;
 
 import com.herbertgao.telegram.business.service.MyBotService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -11,22 +10,21 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.InlineQuery;
 
 /**
- * @program: gaokao_bot
- * @description: TelegramBot
- * @author: HerbertGao
- * @create: 2019-06-08 21:56
- **/
+ * 我的Bot
+ *
+ * @author HerbertGao
+ * @date 2019-06-08
+ */
+@Slf4j
 @Component
 public class MyBot extends TelegramLongPollingBot {
-
-    private final static Logger logger = LoggerFactory.getLogger(MyBot.class);
 
     @Autowired
     private MyBotService myBotService;
 
     @Override
     public void onUpdateReceived(Update update) {
-        logger.debug(update.toString());
+        log.debug(update.toString());
 
         if (update.hasInlineQuery()) {
             InlineQuery inlineQuery = update.getInlineQuery();

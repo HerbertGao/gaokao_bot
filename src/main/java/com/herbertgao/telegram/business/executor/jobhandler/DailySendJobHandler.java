@@ -1,14 +1,15 @@
 package com.herbertgao.telegram.business.executor.jobhandler;
 
-import com.herbertgao.telegram.util.GaokaoBotUtil;
 import com.herbertgao.telegram.database.entity.ExamDate;
 import com.herbertgao.telegram.database.entity.UserTemplate;
 import com.herbertgao.telegram.database.service.ExamDateService;
 import com.herbertgao.telegram.database.service.UserTemplateService;
+import com.herbertgao.telegram.util.GaokaoBotUtil;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import com.xxl.job.core.log.XxlJobLogger;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,11 +22,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
- * @program: gaokao_bot
- * @description: 每日发送高考倒计时到指定频道
- * @author: HerbertGao
- * @create: 2019-06-12 16:10
- **/
+ * 每日发送高考倒计时到指定频道
+ *
+ * @author HerbertGao
+ * @date 2019-06-12
+ */
+@Slf4j
 @Component
 public class DailySendJobHandler {
 

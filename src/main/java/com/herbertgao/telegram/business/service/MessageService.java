@@ -21,11 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @program: gaokao_bot
- * @description: MessageService
- * @author: HerbertGao
- * @create: 2019-06-09 02:37
- **/
+ * 消息服务
+ *
+ * @author HerbertGao
+ * @date 2019-06-09
+ */
 @Service
 public class MessageService {
 

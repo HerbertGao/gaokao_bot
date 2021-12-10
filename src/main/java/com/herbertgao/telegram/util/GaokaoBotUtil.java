@@ -1,28 +1,29 @@
 package com.herbertgao.telegram.util;
 
+import cn.hutool.core.date.BetweenFormatter;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.LocalDateTimeUtil;
 import com.herbertgao.telegram.bot.TemplateReplace;
 import com.herbertgao.telegram.database.entity.ExamDate;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 /**
- * @program: gaokao_bot
- * @description: CommonService
- * @author: HerbertGao
- * @create: 2019-06-09 01:52
- **/
+ * 高考机器人Util
+ *
+ * @author HerbertGao
+ * @date 2019-06-09
+ */
 public class GaokaoBotUtil {
 
     /**
      * 是考试时间
      *
-     * @param now
-     * @return
+     * @param exam 考试
+     * @param now  现在
+     * @return {@link Boolean}
      */
     public static Boolean isExamTime(ExamDate exam, LocalDateTime now) {
         LocalDateTime examBeginDate = exam.getExamBeginDate();
@@ -30,30 +31,31 @@ public class GaokaoBotUtil {
         return (examBeginDate.isBefore(now) || examBeginDate.isEqual(now)) && (examEndDate.isAfter(now) || examEndDate.isEqual(now));
     }
 
-	/**
-	 * 是考试时间
-	 *
-	 * @param now
-	 * @return
-	 */
-	public static Boolean isExpiredExam(ExamDate exam, LocalDateTime now) {
-		LocalDateTime examEndDate = exam.getExamEndDate();
-		return  examEndDate.isBefore(now);
-	}
+    /**
+     * 是过期的考试
+     *
+     * @param exam 考试
+     * @param now  现在
+     * @return {@link Boolean}
+     */
+    public static Boolean isExpiredExam(ExamDate exam, LocalDateTime now) {
+        LocalDateTime examEndDate = exam.getExamEndDate();
+        return examEndDate.isBefore(now);
+    }
 
     /**
-     * 获取倒计时文字
+     * 得到倒计时字符串
      *
-     * @param exam
-     * @param now
-     * @param template
-     * @return
+     * @param exam     考试
+     * @param now      现在
+     * @param template 模板
+     * @return {@link String}
      */
     public static String getCountDownString(ExamDate exam, LocalDateTime now, String template) {
         if (isExamTime(exam, now)) {
             return exam.getExamDesc() + "正在进行中！" + System.getProperty("line.separator");
         } else if (isExpiredExam(exam, now)) {
-	        return exam.getExamDesc() + "已经结束了。" + System.getProperty("line.separator");
+            return exam.getExamDesc() + "已经结束了。" + System.getProperty("line.separator");
         } else {
             String rtn = template;
             String[] searchList = {
@@ -82,29 +84,9 @@ public class GaokaoBotUtil {
      * @return
      */
     public static String getCountDownTime(ExamDate exam, LocalDateTime now) {
-
-        StringBuilder rtn = new StringBuilder();
-
         LocalDateTime examBeginDate = exam.getExamBeginDate();
-        long daysDiff = ChronoUnit.DAYS.between(now, examBeginDate);
-        long hoursDiff = ChronoUnit.HOURS.between(now, examBeginDate) - daysDiff * 24;
-        long minutesDiff = ChronoUnit.MINUTES.between(now, examBeginDate) - daysDiff * 24 * 60 - hoursDiff * 60;
-        long secondsDiff = ChronoUnit.SECONDS.between(now, examBeginDate) - daysDiff * 24 * 60 * 60 - hoursDiff * 60 * 60 - minutesDiff * 60;
-
-        if (daysDiff > 0) {
-            rtn.append(daysDiff).append("天");
-        }
-        if (hoursDiff > 0) {
-            rtn.append(hoursDiff).append("小时");
-        }
-        if (minutesDiff > 0) {
-            rtn.append(minutesDiff).append("分钟");
-        }
-        if (secondsDiff > 0) {
-            rtn.append(secondsDiff).append("秒");
-        }
-
-        return rtn.toString();
+        Duration between = LocalDateTimeUtil.between(now, examBeginDate);
+        return DateUtil.formatBetween(between.getSeconds() * 1000, BetweenFormatter.Level.SECOND);
     }
 
 }

@@ -1,11 +1,11 @@
 package com.herbertgao.telegram.bot;
 
 /**
- * @program: gaokao_bot
- * @description: TelegramBot Command List
- * @author: HerbertGao
- * @create: 2020-04-08 18:59
- **/
+ * 模板替换
+ *
+ * @author HerbertGao
+ * @date 2020-04-08
+ */
 public interface TemplateReplace {
 
     String EXAM_YEAR = "{exam_year}";

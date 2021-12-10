@@ -7,11 +7,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 /**
- * @program: gaokao_bot
- * @description:
- * @author: HerbertGao
- * @create: 2020/7/27 13:27
- **/
+ * TelegramBotUtil
+ *
+ * @author HerbertGao
+ * @date 2021-12-10
+ */
 public class TelegramBotUtil {
 
     public static Boolean isMatchCommand(String text, String command) {
@@ -21,9 +21,9 @@ public class TelegramBotUtil {
     /**
      * 获取消息文字，删除命令、@信息
      *
-     * @param message
-     * @param command
-     * @return
+     * @param message 消息
+     * @param command 命令
+     * @return {@link String}
      */
     public static String getTextByMessage(Message message, String command) {
         String text = message.getText();
@@ -41,9 +41,9 @@ public class TelegramBotUtil {
     /**
      * 删除给定字符1中出现的第一个给定字符2
      *
-     * @param text
-     * @param remove
-     * @return
+     * @param text   文本
+     * @param remove 删除
+     * @return {@link String}
      */
     public static String removeFirst(String text, String remove) {
         return text.replaceFirst(remove, "").trim();
@@ -52,8 +52,8 @@ public class TelegramBotUtil {
     /**
      * 是用户对话
      *
-     * @param message
-     * @return
+     * @param message 消息
+     * @return {@link Boolean}
      */
     public static Boolean isUserChat(Message message) {
         return message.getChat().isUserChat();

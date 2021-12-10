@@ -67,7 +67,7 @@ dependencies {
 
     implementation group: 'com.xuxueli', name: 'xxl-job-core', version: '2.2.0'
 
-    implementation group: 'cn.hutool', name: 'hutool-all', version: '5.2.5'
+    implementation group: 'cn.hutool', name: 'hutool-all', version: '5.7.17'
 
 }
 

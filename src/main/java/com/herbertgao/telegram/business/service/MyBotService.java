@@ -2,8 +2,7 @@ package com.herbertgao.telegram.business.service;
 
 import com.herbertgao.telegram.bot.Command;
 import com.herbertgao.telegram.util.TelegramBotUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.AnswerInlineQuery;
@@ -20,10 +19,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
  * @author: HerbertGao
  * @create: 2019-06-08 23:55
  **/
+@Slf4j
 @Service
 public class MyBotService {
-
-    private final static Logger logger = LoggerFactory.getLogger(MyBotService.class);
 
     @Autowired
     private AbsSender absSender;
@@ -39,7 +37,7 @@ public class MyBotService {
      * @param inlineQuery
      */
     public void inlineQuery(InlineQuery inlineQuery) {
-        logger.debug(inlineQuery.toString());
+        log.debug(inlineQuery.toString());
 
         try {
             AnswerInlineQuery results = inlineQueryService.answerInlineQuery(inlineQuery);
@@ -55,7 +53,7 @@ public class MyBotService {
      * @param message
      */
     public void message(Message message) {
-        logger.debug(message.toString());
+        log.debug(message.toString());
 
         String chatId = message.getChatId().toString();
         User user = message.getFrom();

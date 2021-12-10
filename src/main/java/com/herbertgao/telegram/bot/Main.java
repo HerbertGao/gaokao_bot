@@ -13,11 +13,11 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 /**
- * @program: gaokao_bot
- * @description: Main Class
- * @author: HerbertGao
- * @create: 2019-06-08 21:49
- **/
+ * Main函数
+ *
+ * @author HerbertGao
+ * @date 2019-06-08
+ */
 @SpringBootApplication
 @EnableConfigurationProperties(Config.class)
 @ComponentScan(basePackages = {"com.herbertgao.telegram"})

@@ -6,6 +6,7 @@ import com.herbertgao.telegram.database.service.ExamDateService;
 import com.herbertgao.telegram.database.service.UserTemplateService;
 import com.herbertgao.telegram.util.GaokaoBotUtil;
 import com.herbertgao.telegram.util.IdUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @program: gaokao_bot
- * @description: InlineQuery Service Implements
- * @author: HerbertGao
- * @create: 2019-06-09 00:46
- **/
+ * Inline消息服务
+ *
+ * @author HerbertGao
+ * @date 2021-12-10
+ */
+@Slf4j
 @Service
 public class InlineQueryService {
 
