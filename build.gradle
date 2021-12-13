@@ -57,10 +57,11 @@ dependencies {
     testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
     testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
 
+    // https://mvnrepository.com/artifact/com.baomidou/mybatis-plus-boot-starter
     implementation group: 'com.baomidou', name: 'mybatis-plus-boot-starter', version: '3.4.3.4'
     implementation group: 'mysql', name: 'mysql-connector-java', version: '5.1.45'
     // https://mvnrepository.com/artifact/com.alibaba/druid-spring-boot-starter
-    implementation group: 'com.alibaba', name: 'druid-spring-boot-starter', version: '1.1.23'
+    implementation group: 'com.alibaba', name: 'druid-spring-boot-starter', version: '1.2.8'
 
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
     implementation group: 'com.alibaba', name: 'fastjson', version: '1.2.68'
@@ -69,6 +70,11 @@ dependencies {
 
     implementation group: 'cn.hutool', name: 'hutool-all', version: '5.7.17'
 
+}
+
+configurations {
+    runtime.exclude(group: 'org.apache.logging.log4j', module: 'log4j-api')
+    compile.exclude(group: 'org.apache.logging.log4j', module: 'log4j-api')
 }
 
 group 'com.herbertgao.telegram'

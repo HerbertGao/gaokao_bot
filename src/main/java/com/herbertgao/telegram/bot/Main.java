@@ -8,6 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
@@ -19,6 +20,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
  * @date 2019-06-08
  */
 @SpringBootApplication
+@EnableScheduling
 @EnableConfigurationProperties(Config.class)
 @ComponentScan(basePackages = {"com.herbertgao.telegram"})
 @MapperScan(basePackages = "com.herbertgao.telegram.database.mapper")
