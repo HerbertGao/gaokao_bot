@@ -3,11 +3,11 @@ package com.herbertgao.telegram.bot;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * @program: gaokao_bot
- * @description: TelegramConfig
- * @author: HerbertGao
- * @create: 2019-06-08 22:51
- **/
+ * 配置
+ *
+ * @author HerbertGao
+ * @date 2019-06-08
+ */
 @ConfigurationProperties(prefix = "telegram.bot")
 public class Config {
 

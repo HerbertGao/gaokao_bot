@@ -6,6 +6,7 @@ import com.herbertgao.telegram.database.service.ExamDateService;
 import com.herbertgao.telegram.database.service.UserTemplateService;
 import com.herbertgao.telegram.util.GaokaoBotUtil;
 import com.herbertgao.telegram.util.IdUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @program: gaokao_bot
- * @description: InlineQuery Service Implements
- * @author: HerbertGao
- * @create: 2019-06-09 00:46
- **/
+ * Inline消息服务
+ *
+ * @author HerbertGao
+ * @date 2021-12-10
+ */
+@Slf4j
 @Service
 public class InlineQueryService {
 
@@ -37,10 +39,20 @@ public class InlineQueryService {
 
         List<InlineQueryResult> resultList = new ArrayList<>();
 
-        Integer userId = inlineQuery.getFrom().getId();
+        Long userId = inlineQuery.getFrom().getId();
+        String query = inlineQuery.getQuery();
         LocalDateTime now = LocalDateTime.now().withNano(0);
+        List<ExamDate> examList = new ArrayList<>();
 
-        List<ExamDate> examList = examDateService.getExamList(now, false);
+        if (StringUtils.isNotBlank(query)) {
+            if (StringUtils.isNumeric(query)) {
+                Integer year = Integer.valueOf(query);
+                examList = examDateService.getExamByYear(year);
+            }
+        } else {
+            examList = examDateService.getExamList(now, false);
+        }
+
         UserTemplate defaultTemplate = userTemplateService.getDefaultTemplate();
         List<UserTemplate> templateList = userTemplateService.getUserTemplateListByUserId(userId);
 
@@ -53,7 +65,11 @@ public class InlineQueryService {
             InlineQueryResultArticle r = new InlineQueryResultArticle();
             r.setId(IdUtil.getId().toString());
             r.setTitle(defaultTitle);
-            r.setInputMessageContent(new InputTextMessageContent().setMessageText(defaultMessage));
+            r.setInputMessageContent(new InputTextMessageContent() {
+                {
+                    setMessageText(defaultMessage);
+                }
+            });
             resultList.add(r);
 
             templateList.forEach(template -> {
@@ -65,7 +81,11 @@ public class InlineQueryService {
                 InlineQueryResultArticle ru = new InlineQueryResultArticle();
                 ru.setId(IdUtil.getId().toString());
                 ru.setTitle(title);
-                ru.setInputMessageContent(new InputTextMessageContent().setMessageText(message));
+                ru.setInputMessageContent(new InputTextMessageContent() {
+                    {
+                        setMessageText(message);
+                    }
+                });
                 resultList.add(ru);
             });
         }

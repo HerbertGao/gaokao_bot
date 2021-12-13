@@ -1,12 +1,14 @@
 package com.herbertgao.telegram.bot;
 
 /**
- * @program: gaokao_bot
- * @description: TelegramBot Command List
- * @author: HerbertGao
- * @create: 2019-06-08 23:46
- **/
+ * 命令
+ *
+ * @author HerbertGao
+ * @date 2019-06-08
+ */
 public interface Command {
+
+    String COMMAND_REGEX = "^/[a-zA-Z]+";
 
     String COUNTDOWN_COMMAND = "/d";
     String LIST_COMMAND = "/ls";

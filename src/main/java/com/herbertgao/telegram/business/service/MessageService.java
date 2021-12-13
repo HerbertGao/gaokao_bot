@@ -17,14 +17,15 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @program: gaokao_bot
- * @description: MessageService
- * @author: HerbertGao
- * @create: 2019-06-09 02:37
- **/
+ * 消息服务
+ *
+ * @author HerbertGao
+ * @date 2019-06-09
+ */
 @Service
 public class MessageService {
 
@@ -48,11 +49,25 @@ public class MessageService {
     };
 
     /**
+     * @param message
      * @return
      */
-    String getCountDownCommandMessage() {
+    String getCountDownCommandMessage(Message message) {
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<ExamDate> examList = examDateService.getExamList(now, false);
+        List<ExamDate> examList = new ArrayList<>();
+        String text = TelegramBotUtil.getTextByMessage(message, Command.COUNTDOWN_COMMAND);
+        if (StringUtils.isNotBlank(text)) {
+            if (StringUtils.isNumeric(text)) {
+                Integer year = Integer.valueOf(text);
+                examList = examDateService.getExamByYear(year);
+            }
+            if (examList.size() == 0) {
+                return "参数暂时无法识别。";
+            }
+        } else {
+            examList = examDateService.getExamList(now, false);
+        }
+
         UserTemplate template = userTemplateService.getDefaultTemplate();
 
         if (examList.size() > 0) {
@@ -70,7 +85,7 @@ public class MessageService {
      */
     String getListCommandMessage(Message message) {
         if (TelegramBotUtil.isUserChat(message)) {
-            Integer userId = message.getFrom().getId();
+            Long userId = message.getFrom().getId();
             List<UserTemplate> userTemplateList = userTemplateService.getUserTemplateListByUserId(userId);
 
             StringBuilder sb = new StringBuilder();
@@ -109,7 +124,7 @@ public class MessageService {
      */
     String getAddCommandMessage(Message message) {
         if (TelegramBotUtil.isUserChat(message)) {
-            Integer userId = message.getFrom().getId();
+            Long userId = message.getFrom().getId();
             String text = TelegramBotUtil.getTextByMessage(message, Command.ADD_COMMAND);
             text = TelegramBotUtil.removeFirst(text, "@");
 
@@ -137,7 +152,7 @@ public class MessageService {
      */
     String getRemoveCommandMessage(Message message) {
         if (TelegramBotUtil.isUserChat(message)) {
-            Integer userId = message.getFrom().getId();
+            Long userId = message.getFrom().getId();
             String text = TelegramBotUtil.getTextByMessage(message, Command.REMOVE_COMMAND);
             text = TelegramBotUtil.removeFirst(text, "_");
             text = TelegramBotUtil.removeFirst(text, "@");
@@ -162,7 +177,7 @@ public class MessageService {
      */
     public String getCustomizeCommandMessage(Message message) {
         if (TelegramBotUtil.isUserChat(message)) {
-            Integer userId = message.getFrom().getId();
+            Long userId = message.getFrom().getId();
             String text = TelegramBotUtil.getTextByMessage(message, Command.CUSTOMIZE_COMMAND);
 
             if (text.length() > TEMPLATE_MAX_LENGTH) {
@@ -227,7 +242,7 @@ public class MessageService {
 
     public String getRenameCommandMessage(Message message) {
         if (TelegramBotUtil.isUserChat(message)) {
-            Integer userId = message.getFrom().getId();
+            Long userId = message.getFrom().getId();
             String text = TelegramBotUtil.getTextByMessage(message, Command.RENAME_COMMAND);
 
             try {
