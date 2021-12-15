@@ -1,22 +1,17 @@
 // buildscript必须在顶部，注意位置
 buildscript {
     repositories {
-        // 优先使用国内源
-        maven { url 'https://maven.aliyun.com/repository/jcenter' }
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/central' }
-        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
         mavenCentral()
     }
     dependencies {
         // 让spring-boot支持gradle
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.2.6.RELEASE")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.6.1")
     }
 }
 
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '2.2.6.RELEASE'
+    id 'org.springframework.boot' version '2.6.1'
 }
 
 apply plugin: 'java'
@@ -33,10 +28,6 @@ java {
 }
 
 repositories {
-    maven { url 'https://maven.aliyun.com/repository/jcenter' }
-    maven { url 'https://maven.aliyun.com/repository/google' }
-    maven { url 'https://maven.aliyun.com/repository/central' }
-    maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
     mavenCentral()
 }
 
@@ -46,10 +37,10 @@ dependencies {
     // https://mvnrepository.com/artifact/org.telegram/telegrambots
     implementation group: 'org.telegram', name: 'telegrambots', version: '5.4.0.1'
 
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-parent', version: '2.2.6.RELEASE', ext: 'pom'
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-logging', version: '2.2.6.RELEASE'
-    implementation group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '2.2.6.RELEASE'
-    annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: '2.2.6.RELEASE'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-parent', version: '2.6.1', ext: 'pom'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-logging', version: '2.6.1'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '2.6.1'
+    annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: '2.6.1'
 
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
@@ -59,7 +50,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.baomidou/mybatis-plus-boot-starter
     implementation group: 'com.baomidou', name: 'mybatis-plus-boot-starter', version: '3.4.3.4'
-    implementation group: 'mysql', name: 'mysql-connector-java', version: '5.1.45'
+    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.22'
     // https://mvnrepository.com/artifact/com.alibaba/druid-spring-boot-starter
     implementation group: 'com.alibaba', name: 'druid-spring-boot-starter', version: '1.2.8'
 

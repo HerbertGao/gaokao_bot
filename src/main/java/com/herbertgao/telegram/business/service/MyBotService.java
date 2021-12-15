@@ -4,6 +4,7 @@ import com.herbertgao.telegram.bot.Command;
 import com.herbertgao.telegram.util.TelegramBotUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.AnswerInlineQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -14,15 +15,16 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 /**
- * @program: gaokao_bot
- * @description: TelegramBot Service Implements
- * @author: HerbertGao
- * @create: 2019-06-08 23:55
- **/
+ * 我的机器人服务
+ *
+ * @author HerbertGao
+ * @date 2019-06-08
+ */
 @Slf4j
 @Service
 public class MyBotService {
 
+    @Lazy
     @Autowired
     private AbsSender absSender;
 
@@ -34,7 +36,7 @@ public class MyBotService {
     /**
      * Inline Query
      *
-     * @param inlineQuery
+     * @param inlineQuery 内联查询
      */
     public void inlineQuery(InlineQuery inlineQuery) {
         log.debug(inlineQuery.toString());
@@ -50,7 +52,7 @@ public class MyBotService {
     /**
      * Message
      *
-     * @param message
+     * @param message 消息
      */
     public void message(Message message) {
         log.debug(message.toString());
