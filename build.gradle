@@ -1,6 +1,9 @@
 // buildscript必须在顶部，注意位置
 buildscript {
     repositories {
+        maven { url 'https://maven.aliyun.com/nexus/content/repositories/google' }
+        maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'}
+        maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
         mavenCentral()
     }
     dependencies {
@@ -28,6 +31,9 @@ java {
 }
 
 repositories {
+    maven { url 'https://maven.aliyun.com/nexus/content/repositories/google' }
+    maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'}
+    maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
     mavenCentral()
 }
 
@@ -50,7 +56,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.baomidou/mybatis-plus-boot-starter
     implementation group: 'com.baomidou', name: 'mybatis-plus-boot-starter', version: '3.4.3.4'
-    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.27'
+    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.28'
     // https://mvnrepository.com/artifact/com.alibaba/druid-spring-boot-starter
     implementation group: 'com.alibaba', name: 'druid-spring-boot-starter', version: '1.2.8'
 
