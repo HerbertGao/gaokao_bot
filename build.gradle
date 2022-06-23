@@ -23,8 +23,8 @@ apply plugin: "org.springframework.boot"
 apply plugin: 'io.spring.dependency-management'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_12
-    targetCompatibility = JavaVersion.VERSION_12
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 repositories {
@@ -32,7 +32,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.1'
 
     // https://mvnrepository.com/artifact/org.telegram/telegrambots
     implementation group: 'org.telegram', name: 'telegrambots', version: '6.0.1'
@@ -50,14 +50,12 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.baomidou/mybatis-plus-boot-starter
     implementation group: 'com.baomidou', name: 'mybatis-plus-boot-starter', version: '3.4.3.4'
-    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.22'
+    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.27'
     // https://mvnrepository.com/artifact/com.alibaba/druid-spring-boot-starter
     implementation group: 'com.alibaba', name: 'druid-spring-boot-starter', version: '1.2.8'
 
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
-    implementation group: 'com.alibaba', name: 'fastjson', version: '1.2.68'
-
-    implementation group: 'com.xuxueli', name: 'xxl-job-core', version: '2.2.0'
+    implementation group: 'com.alibaba', name: 'fastjson2', version: '2.0.1'
 
     implementation group: 'cn.hutool', name: 'hutool-all', version: '5.7.17'
 
