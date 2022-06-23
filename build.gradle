@@ -1,9 +1,6 @@
 // buildscript必须在顶部，注意位置
 buildscript {
     repositories {
-        maven { url 'https://maven.aliyun.com/nexus/content/repositories/google' }
-        maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'}
-        maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
         mavenCentral()
     }
     dependencies {
@@ -31,9 +28,6 @@ java {
 }
 
 repositories {
-    maven { url 'https://maven.aliyun.com/nexus/content/repositories/google' }
-    maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'}
-    maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
     mavenCentral()
 }
 
@@ -61,7 +55,7 @@ dependencies {
     implementation group: 'com.alibaba', name: 'druid-spring-boot-starter', version: '1.2.8'
 
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
-    implementation group: 'com.alibaba', name: 'fastjson2', version: '2.0.1'
+    implementation group: 'com.alibaba.fastjson2', name: 'fastjson2', version: '2.0.1'
 
     implementation group: 'cn.hutool', name: 'hutool-all', version: '5.7.17'
 
