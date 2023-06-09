@@ -1,6 +1,7 @@
 package com.herbertgao.telegram.bot.gaokao.business.task;
 
 import cn.hutool.core.date.LocalDateTimeUtil;
+import cn.hutool.core.thread.ThreadUtil;
 import com.herbertgao.telegram.bot.gaokao.business.common.util.GaokaoBotUtil;
 import com.herbertgao.telegram.bot.gaokao.database.domain.ExamDate;
 import com.herbertgao.telegram.bot.gaokao.database.domain.SendChat;
@@ -44,7 +45,10 @@ public class DailySendTask {
      * 日常发送Job
      */
     @Scheduled(cron = "0 0 * * * ?")
-    public void dailySendJobHandler() throws Exception {
+    public void dailySendJobHandler() {
+        // 有时会提前1毫秒触发，故统一休眠5ms后触发
+        ThreadUtil.safeSleep(5);
+
         LocalDateTime now = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
         log.info("到达发送时间: {}", LocalDateTimeUtil.formatNormal(now));
 

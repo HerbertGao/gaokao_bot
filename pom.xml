@@ -152,6 +152,7 @@
                         <createdDate>now</createdDate>
                         <env>
                             <BPE_LANG>C.UTF-8</BPE_LANG>
+                            <BPE_TZ>Asia/Shanghai</BPE_TZ>
                         </env>
                     </image>
                 </configuration>
