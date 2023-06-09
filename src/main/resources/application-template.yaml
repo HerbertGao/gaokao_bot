@@ -26,5 +26,5 @@ spring:
 
 telegram:
   bot:
-    username:
-    token:
+    username: test_bot
+    token: test_token
