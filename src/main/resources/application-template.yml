@@ -27,4 +27,4 @@ spring:
 telegram:
   bot:
     username: test_bot
-    token: test_token
+    token: 123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ
