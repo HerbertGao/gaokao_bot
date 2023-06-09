@@ -161,14 +161,20 @@
 
     <profiles>
         <profile>
-            <id>dev</id>
+            <id>template</id>
             <properties>
-                <package.environment>dev</package.environment>
+                <package.environment>template</package.environment>
             </properties>
             <!-- 是否默认 true表示默认-->
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+        </profile>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <package.environment>dev</package.environment>
+            </properties>
         </profile>
         <profile>
             <id>online</id>
