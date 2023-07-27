@@ -14,4 +14,4 @@ updates:
     schedule:
       interval: "daily"
     access_tokens:
-      - ${{ secrets.GITHUB_TOKEN }}
+      - ${{ secrets.DEPENDA_BOT }}
