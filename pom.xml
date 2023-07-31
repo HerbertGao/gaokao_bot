@@ -31,7 +31,7 @@
         <common.lang.version>3.13.0</common.lang.version>
         <common.collections.version>4.4</common.collections.version>
         <common.pool.version>2.11.1</common.pool.version>
-        <fastjson2.version>2.0.37</fastjson2.version>
+        <fastjson2.version>2.0.38</fastjson2.version>
         <hutool.version>5.8.20</hutool.version>
     </properties>
 
