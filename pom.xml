@@ -24,7 +24,7 @@
         <telegrambot.version>6.7.0</telegrambot.version>
 
         <mysql.version>8.0.30</mysql.version>
-        <mybatis-plus.version>3.5.3.1</mybatis-plus.version>
+        <mybatis-plus.version>3.5.3.2</mybatis-plus.version>
         <druid.version>1.2.18</druid.version>
 
         <lombok.version>1.18.28</lombok.version>
