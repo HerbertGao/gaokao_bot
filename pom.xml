@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
+        <version>3.2.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.herbertgao</groupId>
@@ -21,18 +21,18 @@
 
         <springboot.version>3.1.0</springboot.version>
 
-        <telegrambot.version>6.8.0</telegrambot.version>
+        <telegrambot.version>6.9.7.0</telegrambot.version>
 
         <mysql.version>8.0.30</mysql.version>
-        <mybatis-plus.version>3.5.5-SNAPSHOT</mybatis-plus.version>
-        <druid.version>1.2.20</druid.version>
+        <mybatis-plus.version>3.5.5</mybatis-plus.version>
+        <druid.version>1.2.21</druid.version>
 
         <lombok.version>1.18.30</lombok.version>
         <common.lang.version>3.14.0</common.lang.version>
         <common.collections.version>4.4</common.collections.version>
         <common.pool.version>2.12.0</common.pool.version>
-        <fastjson2.version>2.0.43</fastjson2.version>
-        <hutool.version>5.8.23</hutool.version>
+        <fastjson2.version>2.0.45</fastjson2.version>
+        <hutool.version>5.8.25</hutool.version>
     </properties>
 
     <dependencies>
@@ -138,28 +138,23 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.google.cloud.tools</groupId>
-                <artifactId>jib-maven-plugin</artifactId>
-                <version>3.4.0</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <from>
-                        <image>eclipse-temurin:21-jre</image>
-                    </from>
-                    <to>
-                        <image>registry-intl.us-west-1.aliyuncs.com/herbertgao/gaokao_bot</image>
-                        <tags>
-                            <tag>${revision}-${package.environment}</tag>
-                        </tags>
-                    </to>
-                    <container>
-                        <jvmFlags>
-                            <jvmFlag>-Duser.timezone=GMT+8</jvmFlag>
-                            <jvmFlag>-Dfile.encoding=UTF8</jvmFlag>
-                            <jvmFlag>-Xdebug</jvmFlag>
-                        </jvmFlags>
-                        <mainClass>com.herbertgao.telegram.bot.GaokaoBotApplication</mainClass>
-                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
-                    </container>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                    <image>
+                        <name>registry-intl.us-west-1.aliyuncs.com/herbertgao/gaokao_bot:${revision}-${package.environment}</name>
+                        <createdDate>now</createdDate>
+                        <env>
+                            <BPE_LANG>C.UTF-8</BPE_LANG>
+                            <BPE_TZ>Asia/Shanghai</BPE_TZ>
+                        </env>
+                    </image>
                 </configuration>
             </plugin>
         </plugins>
@@ -196,13 +191,4 @@
         </profile>
     </profiles>
 
-    <repositories>
-        <repository>
-            <id>snapshots-sonatype</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
