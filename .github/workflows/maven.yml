@@ -10,7 +10,7 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "dev", "feature" ]
   pull_request:
     branches: [ "master" ]
 
@@ -21,12 +21,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: graalvm/setup-graalvm@v1
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
+          java-version: '21'
+          distribution: 'graalvm' # See 'Options' for all available distributions
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build with Maven
         env:
           MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
@@ -34,3 +33,5 @@ jobs:
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         run: mvn -B package --file pom.xml
+#      - name: JIB container publish
+#        uses: MathieuSoysal/jib-container-publish.yml@v2.1.5
