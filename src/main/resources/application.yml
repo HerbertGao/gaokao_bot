@@ -2,7 +2,7 @@ spring:
   application:
     name: @project.artifactId@
   profiles:
-    active: @package.environment@
+    active: @spring.profiles.active@
   devtools:
     add-properties: false
 server:

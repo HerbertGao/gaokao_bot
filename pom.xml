@@ -16,8 +16,9 @@
     <properties>
         <java.version>21</java.version>
         <resource.delimiter>@</resource.delimiter>
+        <spring.profiles.active>template</spring.profiles.active>
 
-        <revision>6.0.0</revision>
+        <revision>7.0.0</revision>
 
         <springboot.version>3.1.0</springboot.version>
 
@@ -33,6 +34,13 @@
         <common.pool.version>2.12.0</common.pool.version>
         <fastjson2.version>2.0.45</fastjson2.version>
         <hutool.version>5.8.25</hutool.version>
+
+        <native-build-tools-plugin.version>0.9.28</native-build-tools-plugin.version>
+        <docker.build.directory>${project.build.directory}/docker/local</docker.build.directory>
+        <docker.skip>true</docker.skip>
+        <plugin.fabric8io-docker.version>0.43.2</plugin.fabric8io-docker.version>
+        <plugin.maven-compiler.version>3.6.1</plugin.maven-compiler.version>
+        <plugin.maven-resources.version>3.0.2</plugin.maven-resources.version>
     </properties>
 
     <dependencies>
@@ -74,7 +82,7 @@
         <!--mybatis-plus依赖-->
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
             <version>${mybatis-plus.version}</version>
         </dependency>
         <!--druid数据库连接池依赖-->
@@ -123,7 +131,7 @@
         </dependency>
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
-            <artifactId>fastjson2-extension-spring5</artifactId>
+            <artifactId>fastjson2-extension-spring6</artifactId>
             <version>${fastjson2.version}</version>
         </dependency>
 
@@ -136,6 +144,40 @@
     </dependencies>
 
     <build>
+        <finalName>${project.name}</finalName>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>io.fabric8</groupId>
+                    <artifactId>docker-maven-plugin</artifactId>
+                    <version>${plugin.fabric8io-docker.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${plugin.maven-compiler.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${plugin.maven-resources.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>application-${spring.profiles.active}.yml</include>
+                    <include>application.yml</include>
+                    <include>**/*.xml</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -147,15 +189,151 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
-                    <image>
-                        <name>registry-intl.us-west-1.aliyuncs.com/herbertgao/gaokao_bot:${revision}-${package.environment}</name>
-                        <createdDate>now</createdDate>
-                        <env>
-                            <BPE_LANG>C.UTF-8</BPE_LANG>
-                            <BPE_TZ>Asia/Shanghai</BPE_TZ>
-                        </env>
-                    </image>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.graalvm.buildtools</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <version>${native-build-tools-plugin.version}</version>
+                <configuration>
+                    <!-- imageName is used to set the name of the generated binary file -->
+                    <imageName>${project.artifactId}</imageName>
+                    <!-- mainClass is used to specify the path to the main method class -->
+                    <mainClass>com.herbertgao.telegram.bot.GaokaoBotApplication</mainClass>
+                    <buildArgs>
+                        --no-fallback
+                    </buildArgs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>build-native</id>
+                        <goals>
+                            <goal>compile-no-fork</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>docker-resources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <delimiters>
+                                <delimiter>${*}</delimiter>
+                            </delimiters>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/docker</directory>
+                                    <filtering>true</filtering>
+                                    <excludes>
+                                        <exclude>**/.dockerignore</exclude>
+                                        <exclude>**/.gitignore</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${docker.build.directory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <!--全局配置-->
+                <configuration>
+                    <!--这一部分是为了实现对远程docker容器的控制-->
+                    <!--                    <dockerHost>http://127.0.0.1:2375</dockerHost>-->
+                    <verbose>true</verbose>
+                    <!--docker远程访问所需证书地址,如果docker远程主机没有启用TLS验证则不需要配证书-->
+                    <!--                    <certPath>${project.basedir}/docker/ssh</certPath>-->
+
+                    <!--这一部分是为了实现docker镜像的构建和推送-->
+                    <registry>https://registry-intl.cn-beijing.aliyuncs.com</registry>
+
+                    <!--镜像相关配置,支持多镜像-->
+                    <images>
+                        <!-- 单个镜像配置 -->
+                        <image>
+                            <!--镜像名(含版本号)-->
+                            <name>registry-intl.us-west-1.aliyuncs.com/herbertgao/${project.artifactId}:${project.version}-${spring.profiles.active}</name>
+                            <!--别名:用于容器命名-->
+                            <alias>${project.name}</alias>
+                            <!--镜像build相关配置-->
+                            <build>
+                                <buildx>
+                                    <platforms>
+                                        <platform>linux/amd64</platform>
+                                        <platform>linux/arm64</platform>
+                                    </platforms>
+                                </buildx>
+                                <dockerFileDir>${docker.build.directory}</dockerFileDir>
+                                <assembly>
+                                    <!-- artifact是预定义的值，表示将项目打包后的jar拷贝到编译上下文中，便于Dockerfile ADD指令 -->
+                                    <descriptorRef>artifact</descriptorRef>
+                                </assembly>
+                                <tags>
+                                    <tag>${project.version}-${spring.profiles.active}</tag>
+                                </tags>
+                                <labels>
+                                    <maven.project.groupId>${project.groupId}</maven.project.groupId>
+                                    <maven.project.artifactId>${project.artifactId}</maven.project.artifactId>
+                                    <maven.project.version>${project.version}</maven.project.version>
+                                </labels>
+                            </build>
+                        </image>
+                    </images>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>docker-clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>remove</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>docker-build</id>
+                        <goals>
+                            <goal>build</goal>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>docker-source</id>
+                        <goals>
+                            <goal>source</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>docker-push</id>
+                        <goals>
+                            <goal>push</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <!--该插件需要这个依赖-->
+                    <dependency>
+                        <groupId>commons-codec</groupId>
+                        <artifactId>commons-codec</artifactId>
+                        <version>1.11</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
@@ -163,30 +341,66 @@
     <profiles>
         <profile>
             <id>template</id>
-            <properties>
-                <package.environment>template</package.environment>
-            </properties>
             <!-- 是否默认 true表示默认-->
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <properties>
+                <spring.profiles.active>template</spring.profiles.active>
+            </properties>
         </profile>
         <profile>
             <id>dev</id>
             <properties>
-                <package.environment>dev</package.environment>
+                <spring.profiles.active>dev</spring.profiles.active>
             </properties>
         </profile>
         <profile>
             <id>online</id>
             <properties>
-                <package.environment>online</package.environment>
+                <spring.profiles.active>online</spring.profiles.active>
             </properties>
         </profile>
         <profile>
             <id>online-beta</id>
             <properties>
-                <package.environment>online-beta</package.environment>
+                <spring.profiles.active>online-beta</spring.profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>detected-docker-socket</id>
+            <activation>
+                <file>
+                    <exists>/var/run/docker.sock</exists>
+                </file>
+            </activation>
+            <properties>
+                <docker.skip>false</docker.skip>
+                <!--<docker.host>unix:///var/run/docker.sock</docker.host>-->
+            </properties>
+        </profile>
+        <profile>
+            <id>detected-docker-host</id>
+            <activation>
+                <property>
+                    <name>env.DOCKER_HOST</name>
+                </property>
+            </activation>
+            <properties>
+                <docker.skip>false</docker.skip>
+                <!--<docker.host>${env.DOCKER_HOST}</docker.host>-->
+            </properties>
+        </profile>
+        <profile>
+            <id>provided-docker-host</id>
+            <activation>
+                <property>
+                    <name>docker.host</name>
+                </property>
+            </activation>
+            <properties>
+                <docker.skip>false</docker.skip>
+                <docker.host>unix:///var/run/docker.sock</docker.host>
             </properties>
         </profile>
     </profiles>
