@@ -260,7 +260,7 @@
                     <!--                    <certPath>${project.basedir}/docker/ssh</certPath>-->
 
                     <!--这一部分是为了实现docker镜像的构建和推送-->
-                    <registry>https://registry-intl.cn-beijing.aliyuncs.com</registry>
+                    <registry>https://registry-intl.us-west-1.aliyuncs.com</registry>
 
                     <!--镜像相关配置,支持多镜像-->
                     <images>
