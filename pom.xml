@@ -192,6 +192,12 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>process-aot</id>
+                        <goals>
+                            <goal>process-aot</goal>
+                        </goals>
+                    </execution>
+                    <execution>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
@@ -211,15 +217,6 @@
                         --no-fallback
                     </buildArgs>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>build-native</id>
-                        <goals>
-                            <goal>compile-no-fork</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -402,6 +399,27 @@
                 <docker.skip>false</docker.skip>
                 <docker.host>unix:///var/run/docker.sock</docker.host>
             </properties>
+        </profile>
+        <profile>
+            <id>native</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.graalvm.buildtools</groupId>
+                            <artifactId>native-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>build-image</id>
+                                    <goals>
+                                        <goal>compile-no-fork</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
         </profile>
     </profiles>
 
