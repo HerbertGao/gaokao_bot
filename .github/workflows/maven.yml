@@ -21,12 +21,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - uses: graalvm/setup-graalvm@v1
         with:
           java-version: '21'
-          distribution: 'temurin'
-          cache: maven
+          distribution: 'graalvm' # See 'Options' for all available distributions
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build with Maven
         env:
           MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
