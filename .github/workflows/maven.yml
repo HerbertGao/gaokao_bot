@@ -32,6 +32,6 @@ jobs:
           MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-        run: mvn -B package --file pom.xml
+        run: mvn -B package docker:build --file pom.xml
 #      - name: JIB container publish
 #        uses: MathieuSoysal/jib-container-publish.yml@v2.1.5
