@@ -22,7 +22,7 @@
 
         <springboot.version>3.1.0</springboot.version>
 
-        <telegrambot.version>6.9.7.0</telegrambot.version>
+        <telegrambot.version>6.9.7.1</telegrambot.version>
 
         <mysql.version>8.0.30</mysql.version>
         <mybatis-plus.version>3.5.5</mybatis-plus.version>
