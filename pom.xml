@@ -33,7 +33,7 @@
         <common.collections.version>4.4</common.collections.version>
         <common.pool.version>2.12.0</common.pool.version>
         <fastjson2.version>2.0.51</fastjson2.version>
-        <hutool.version>5.8.28</hutool.version>
+        <hutool.version>5.8.29</hutool.version>
 
         <native-build-tools-plugin.version>0.9.28</native-build-tools-plugin.version>
         <docker.build.directory>${project.build.directory}/docker/local</docker.build.directory>
