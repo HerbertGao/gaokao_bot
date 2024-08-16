@@ -29,7 +29,7 @@
         <druid.version>1.2.23</druid.version>
 
         <lombok.version>1.18.34</lombok.version>
-        <common.lang.version>3.14.0</common.lang.version>
+        <common.lang.version>3.16.0</common.lang.version>
         <common.collections.version>4.4</common.collections.version>
         <common.pool.version>2.12.0</common.pool.version>
         <fastjson2.version>2.0.52</fastjson2.version>
