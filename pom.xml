@@ -35,7 +35,7 @@
         <fastjson2.version>2.0.53</fastjson2.version>
         <hutool.version>5.8.35</hutool.version>
 
-        <native-build-tools-plugin.version>0.9.28</native-build-tools-plugin.version>
+        <native-build-tools-plugin.version>0.10.5</native-build-tools-plugin.version>
         <docker.build.directory>${project.build.directory}/docker/local</docker.build.directory>
         <docker.skip>true</docker.skip>
         <plugin.fabric8io-docker.version>0.43.2</plugin.fabric8io-docker.version>
