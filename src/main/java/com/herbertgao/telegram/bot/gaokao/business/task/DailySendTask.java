@@ -1,8 +1,8 @@
 package com.herbertgao.telegram.bot.gaokao.business.task;
 
-import cn.hutool.core.date.LocalDateTimeUtil;
-import cn.hutool.core.thread.ThreadUtil;
 import com.herbertgao.telegram.bot.gaokao.business.common.util.GaokaoBotUtil;
+import com.herbertgao.telegram.bot.gaokao.business.common.util.ThreadUtils;
+import com.herbertgao.telegram.bot.gaokao.business.common.util.DateTimeUtils;
 import com.herbertgao.telegram.bot.gaokao.database.domain.ExamDate;
 import com.herbertgao.telegram.bot.gaokao.database.domain.SendChat;
 import com.herbertgao.telegram.bot.gaokao.database.domain.UserTemplate;
@@ -12,11 +12,12 @@ import com.herbertgao.telegram.bot.gaokao.database.service.UserTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -32,8 +33,9 @@ import java.util.List;
 @Component
 public class DailySendTask {
 
+    @Lazy
     @Autowired
-    private AbsSender absSender;
+    private TelegramClient telegramClient;
     @Autowired
     private ExamDateService examDateService;
     @Autowired
@@ -47,10 +49,10 @@ public class DailySendTask {
     @Scheduled(cron = "0 0 * * * ?")
     public void dailySendJobHandler() {
         // 有时会提前1毫秒触发，故统一休眠5ms后触发
-        ThreadUtil.safeSleep(5);
+        ThreadUtils.safeSleep(5);
 
         LocalDateTime now = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
-        log.info("到达发送时间: {}", LocalDateTimeUtil.formatNormal(now));
+        log.info("到达发送时间: {}", DateTimeUtils.formatNormal(now));
 
         List<ExamDate> examList = examDateService.getExamList(now, true);
         List<SendChat> sendChatList = sendChatService.list();
@@ -76,7 +78,7 @@ public class DailySendTask {
                 if (StringUtils.isNotBlank(msg)) {
                     sendChatList.forEach(chat -> {
                         try {
-                            absSender.execute(new SendMessage(chat.getChatId(), msg));
+                            telegramClient.execute(new SendMessage(chat.getChatId(), msg));
                             log.info("倒计时发送频道: {}, 倒计时信息: {}", chat.getChatId(), msg);
                         } catch (TelegramApiException e) {
                             log.error("倒计时发送失败：发送频道: {}, 倒计时信息: {}, 错误信息: {}", chat.getChatId(), msg, e.getMessage());
