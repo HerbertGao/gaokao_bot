@@ -18,11 +18,11 @@
         <resource.delimiter>@</resource.delimiter>
         <spring.profiles.active>template</spring.profiles.active>
 
-        <revision>7.0.0</revision>
+        <revision>8.0.0</revision>
 
         <springboot.version>3.1.0</springboot.version>
 
-        <telegrambot.version>6.9.7.1</telegrambot.version>
+        <telegrambot.version>9.0.0</telegrambot.version>
 
         <mysql.version>8.0.30</mysql.version>
         <mybatis-plus.version>3.5.12</mybatis-plus.version>
@@ -33,7 +33,6 @@
         <common.collections.version>4.5.0</common.collections.version>
         <common.pool.version>2.12.1</common.pool.version>
         <fastjson2.version>2.0.57</fastjson2.version>
-        <hutool.version>5.8.37</hutool.version>
 
         <native-build-tools-plugin.version>0.9.28</native-build-tools-plugin.version>
         <docker.build.directory>${project.build.directory}/docker/local</docker.build.directory>
@@ -66,9 +65,16 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Long polling bot -->
         <dependency>
             <groupId>org.telegram</groupId>
-            <artifactId>telegrambots</artifactId>
+            <artifactId>telegrambots-longpolling</artifactId>
+            <version>${telegrambot.version}</version>
+        </dependency>
+        <!-- OkHttp client implementation -->
+        <dependency>
+            <groupId>org.telegram</groupId>
+            <artifactId>telegrambots-client</artifactId>
             <version>${telegrambot.version}</version>
         </dependency>
 
@@ -133,12 +139,6 @@
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2-extension-spring6</artifactId>
             <version>${fastjson2.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-            <version>${hutool.version}</version>
         </dependency>
 
     </dependencies>

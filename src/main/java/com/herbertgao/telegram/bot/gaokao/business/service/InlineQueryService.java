@@ -62,14 +62,13 @@ public class InlineQueryService {
 
             String defaultTitle = "查看" + examDesc + "倒计时";
             String defaultMessage = GaokaoBotUtil.getCountDownString(exam, now, defaultTemplate.getTemplateContent());
-            InlineQueryResultArticle r = new InlineQueryResultArticle();
-            r.setId(IdUtil.getId().toString());
-            r.setTitle(defaultTitle);
-            r.setInputMessageContent(new InputTextMessageContent() {
-                {
-                    setMessageText(defaultMessage);
-                }
-            });
+            InlineQueryResultArticle r = InlineQueryResultArticle.builder()
+                    .id(IdUtil.getId().toString())
+                    .title(defaultTitle)
+                    .inputMessageContent(InputTextMessageContent.builder()
+                            .messageText(defaultMessage)
+                            .build())
+                    .build();
             resultList.add(r);
 
             templateList.forEach(template -> {
@@ -78,24 +77,24 @@ public class InlineQueryService {
                     title += " (" + template.getTemplateName() + ")";
                 }
                 String message = GaokaoBotUtil.getCountDownString(exam, now, template.getTemplateContent());
-                InlineQueryResultArticle ru = new InlineQueryResultArticle();
-                ru.setId(IdUtil.getId().toString());
-                ru.setTitle(title);
-                ru.setInputMessageContent(new InputTextMessageContent() {
-                    {
-                        setMessageText(message);
-                    }
-                });
+                InlineQueryResultArticle ru = InlineQueryResultArticle.builder()
+                        .id(IdUtil.getId().toString())
+                        .title(title)
+                        .inputMessageContent(InputTextMessageContent.builder()
+                                .messageText(message)
+                                .build())
+                        .build();
                 resultList.add(ru);
             });
         }
 
         String inlineQueryId = inlineQuery.getId();
 
-        AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery();
-        answerInlineQuery.setInlineQueryId(inlineQueryId);
-        answerInlineQuery.setResults(resultList);
-        answerInlineQuery.setCacheTime(1);
+        AnswerInlineQuery answerInlineQuery = AnswerInlineQuery.builder()
+                .inlineQueryId(inlineQueryId)
+                .results(resultList)
+                .cacheTime(1)
+                .build();
         return answerInlineQuery;
 
     }

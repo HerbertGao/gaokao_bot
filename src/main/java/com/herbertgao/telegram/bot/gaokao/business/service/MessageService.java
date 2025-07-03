@@ -1,10 +1,10 @@
 package com.herbertgao.telegram.bot.gaokao.business.service;
 
-import cn.hutool.core.util.ReUtil;
 import com.herbertgao.telegram.bot.gaokao.business.common.constant.Command;
 import com.herbertgao.telegram.bot.gaokao.business.common.constant.Config;
 import com.herbertgao.telegram.bot.gaokao.business.common.constant.TemplateReplace;
 import com.herbertgao.telegram.bot.gaokao.business.common.util.GaokaoBotUtil;
+import com.herbertgao.telegram.bot.gaokao.business.common.util.RegexUtils;
 import com.herbertgao.telegram.bot.gaokao.business.common.util.TelegramBotUtil;
 import com.herbertgao.telegram.bot.gaokao.database.domain.ExamDate;
 import com.herbertgao.telegram.bot.gaokao.database.domain.UserTemplate;
@@ -13,7 +13,7 @@ import com.herbertgao.telegram.bot.gaokao.database.service.UserTemplateService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -202,7 +202,7 @@ public class MessageService {
                 StringBuilder sb = new StringBuilder();
 
                 if (StringUtils.isNotBlank(text)) {
-                    String templateName = ReUtil.get("(?<=【)[^】]+", text, 0);
+                    String templateName = RegexUtils.get("(?<=【)[^】]+", text, 0);
                     if (StringUtils.isBlank(templateName)) {
                         templateName = "自定义模板";
                     } else if (templateName.length() > 20) {
@@ -246,7 +246,7 @@ public class MessageService {
             String text = TelegramBotUtil.getTextByMessage(message, Command.RENAME_COMMAND);
 
             try {
-                String templateId = ReUtil.get("^[0-9]*", text, 0);
+                String templateId = RegexUtils.get("^[0-9]*", text, 0);
                 String newName = text.replace(templateId, "").trim();
 
                 if (newName.length() > TEMPLATE_NAME_MAX_LENGTH) {

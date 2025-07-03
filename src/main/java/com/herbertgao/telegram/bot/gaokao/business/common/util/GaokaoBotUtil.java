@@ -1,8 +1,5 @@
 package com.herbertgao.telegram.bot.gaokao.business.common.util;
 
-import cn.hutool.core.date.BetweenFormatter;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.date.LocalDateTimeUtil;
 import com.herbertgao.telegram.bot.gaokao.business.common.constant.TemplateReplace;
 import com.herbertgao.telegram.bot.gaokao.database.domain.ExamDate;
 import org.apache.commons.lang3.StringUtils;
@@ -99,8 +96,8 @@ public class GaokaoBotUtil {
      */
     public static String getCountDownTime(ExamDate exam, LocalDateTime now) {
         LocalDateTime examBeginDate = exam.getExamBeginDate();
-        Duration between = LocalDateTimeUtil.between(now, examBeginDate);
-        return DateUtil.formatBetween(between.getSeconds() * 1000, BetweenFormatter.Level.SECOND);
+        Duration between = Duration.between(now, examBeginDate);
+        return DateTimeUtils.formatDuration(between);
     }
 
 }
