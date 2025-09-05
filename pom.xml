@@ -28,7 +28,7 @@
         <mybatis-plus.version>3.5.12</mybatis-plus.version>
         <druid.version>1.2.27</druid.version>
 
-        <lombok.version>1.18.38</lombok.version>
+        <lombok.version>1.18.40</lombok.version>
         <common.lang.version>3.18.0</common.lang.version>
         <common.collections.version>4.5.0</common.collections.version>
         <common.pool.version>2.12.1</common.pool.version>
