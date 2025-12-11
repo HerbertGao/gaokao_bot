@@ -53,14 +53,21 @@ func (rl *RateLimiter) cleanupVisitors() {
 	for {
 		select {
 		case <-ticker.C:
+			// 收集需要删除的 key，避免在遍历 map 时修改
+			var keysToDelete []string
+
 			rl.mu.Lock()
 			for key, v := range rl.visitors {
-				// 锁定访客并检查是否过期，避免在读取和删除之间的竞态
 				v.mu.Lock()
 				if time.Since(v.lastSeen) > rl.cleanup {
-					delete(rl.visitors, key)
+					keysToDelete = append(keysToDelete, key)
 				}
 				v.mu.Unlock()
+			}
+
+			// 删除过期的访客
+			for _, key := range keysToDelete {
+				delete(rl.visitors, key)
 			}
 			rl.mu.Unlock()
 		case <-rl.done:

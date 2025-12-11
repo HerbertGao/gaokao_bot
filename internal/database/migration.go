@@ -58,18 +58,27 @@ func RunMigrations(db *gorm.DB) error {
 			continue
 		}
 
-		// 执行迁移
-		if err := migration.Up(db); err != nil {
-			return fmt.Errorf("failed to apply migration %s: %w", migration.Version, err)
-		}
+		// 在事务中执行迁移和记录，确保原子性
+		err := db.Transaction(func(tx *gorm.DB) error {
+			// 执行迁移
+			if err := migration.Up(tx); err != nil {
+				return fmt.Errorf("failed to apply migration: %w", err)
+			}
 
-		// 记录迁移
-		record := Migration{
-			Version:   migration.Version,
-			AppliedAt: time.Now(),
-		}
-		if err := db.Create(&record).Error; err != nil {
-			return fmt.Errorf("failed to record migration %s: %w", migration.Version, err)
+			// 记录迁移
+			record := Migration{
+				Version:   migration.Version,
+				AppliedAt: time.Now(),
+			}
+			if err := tx.Create(&record).Error; err != nil {
+				return fmt.Errorf("failed to record migration: %w", err)
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return fmt.Errorf("migration %s failed: %w", migration.Version, err)
 		}
 
 		fmt.Printf("✓ Applied migration: %s\n", migration.Version)

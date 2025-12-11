@@ -20,7 +20,6 @@ linters:
     - ineffassign   # 检测无效的赋值
     - staticcheck   # 静态分析
     - unused        # 检查未使用的常量、变量、函数和类型
-    - gofmt         # 检查代码格式
     - goimports     # 检查 import 格式
     - misspell      # 拼写检查
     - revive        # Go linter

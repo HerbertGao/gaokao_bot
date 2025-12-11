@@ -148,9 +148,9 @@ func Load(env string) (*Config, error) {
 
 // Validate 验证配置
 func (c *Config) Validate() error {
-	// 验证 Telegram Bot Token（生产环境必需）
-	if c.App.Env == "prod" && c.Telegram.Bot.Token == "" {
-		return fmt.Errorf("生产环境必须配置 TELEGRAM_BOT_TOKEN")
+	// 验证 Telegram Bot Token
+	if c.Telegram.Bot.Token == "" {
+		return fmt.Errorf("必须配置 TELEGRAM_BOT_TOKEN (当前环境: %s)", c.App.Env)
 	}
 
 	// 验证数据库配置

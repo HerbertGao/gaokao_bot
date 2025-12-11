@@ -7,16 +7,23 @@ import (
 
 func TestLoad(t *testing.T) {
 	// 创建临时环境变量
-	oldEnv := os.Getenv("APP_PORT")
+	oldPort := os.Getenv("APP_PORT")
+	oldToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	defer func() {
-		if oldEnv != "" {
-			_ = os.Setenv("APP_PORT", oldEnv)
+		if oldPort != "" {
+			_ = os.Setenv("APP_PORT", oldPort)
 		} else {
 			_ = os.Unsetenv("APP_PORT")
+		}
+		if oldToken != "" {
+			_ = os.Setenv("TELEGRAM_BOT_TOKEN", oldToken)
+		} else {
+			_ = os.Unsetenv("TELEGRAM_BOT_TOKEN")
 		}
 	}()
 
 	_ = os.Setenv("APP_PORT", "8080")
+	_ = os.Setenv("TELEGRAM_BOT_TOKEN", "test_token")
 
 	cfg, err := Load("dev")
 	if err != nil {
@@ -35,6 +42,17 @@ func TestLoad(t *testing.T) {
 }
 
 func TestLoad_InvalidEnv(t *testing.T) {
+	oldToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	defer func() {
+		if oldToken != "" {
+			_ = os.Setenv("TELEGRAM_BOT_TOKEN", oldToken)
+		} else {
+			_ = os.Unsetenv("TELEGRAM_BOT_TOKEN")
+		}
+	}()
+
+	_ = os.Setenv("TELEGRAM_BOT_TOKEN", "test_token")
+
 	_, err := Load("invalid_env")
 	// 应该仍然成功，只是使用默认配置
 	if err != nil {
@@ -45,16 +63,23 @@ func TestLoad_InvalidEnv(t *testing.T) {
 func TestLoad_EnvOverride(t *testing.T) {
 	// 设置环境变量
 	oldPort := os.Getenv("APP_PORT")
+	oldToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	defer func() {
 		if oldPort != "" {
 			_ = os.Setenv("APP_PORT", oldPort)
 		} else {
 			_ = os.Unsetenv("APP_PORT")
 		}
+		if oldToken != "" {
+			_ = os.Setenv("TELEGRAM_BOT_TOKEN", oldToken)
+		} else {
+			_ = os.Unsetenv("TELEGRAM_BOT_TOKEN")
+		}
 	}()
 
 	testPort := "9999"
 	_ = os.Setenv("APP_PORT", testPort)
+	_ = os.Setenv("TELEGRAM_BOT_TOKEN", "test_token")
 
 	cfg, err := Load("dev")
 	if err != nil {
@@ -74,6 +99,11 @@ func TestValidate_Success(t *testing.T) {
 			Env:  "dev",
 			Port: 8080,
 		},
+		Telegram: TelegramConfig{
+			Bot: BotConfig{
+				Token: "test_token",
+			},
+		},
 		Database: DatabaseConfig{
 			Host:     "localhost",
 			Port:     3306,
@@ -88,15 +118,15 @@ func TestValidate_Success(t *testing.T) {
 	}
 }
 
-func TestValidate_ProdRequiresBotToken(t *testing.T) {
+func TestValidate_RequiresBotToken(t *testing.T) {
 	cfg := &Config{
 		App: AppConfig{
-			Env:  "prod",
+			Env:  "dev",
 			Port: 8080,
 		},
 		Telegram: TelegramConfig{
 			Bot: BotConfig{
-				Token: "", // 生产环境缺少 token
+				Token: "", // 缺少 token
 			},
 		},
 		Database: DatabaseConfig{
@@ -109,7 +139,7 @@ func TestValidate_ProdRequiresBotToken(t *testing.T) {
 
 	err := cfg.Validate()
 	if err == nil {
-		t.Error("Validate() should return error for prod without bot token")
+		t.Error("Validate() should return error when bot token is missing")
 	}
 }
 
@@ -121,7 +151,8 @@ func TestValidate_DatabaseConfigRequired(t *testing.T) {
 		{
 			name: "Missing DB host",
 			config: &Config{
-				App: AppConfig{Env: "dev", Port: 8080},
+				App:      AppConfig{Env: "dev", Port: 8080},
+				Telegram: TelegramConfig{Bot: BotConfig{Token: "test_token"}},
 				Database: DatabaseConfig{
 					Host:     "", // 缺少
 					Port:     3306,
@@ -133,7 +164,8 @@ func TestValidate_DatabaseConfigRequired(t *testing.T) {
 		{
 			name: "Missing DB name",
 			config: &Config{
-				App: AppConfig{Env: "dev", Port: 8080},
+				App:      AppConfig{Env: "dev", Port: 8080},
+				Telegram: TelegramConfig{Bot: BotConfig{Token: "test_token"}},
 				Database: DatabaseConfig{
 					Host:     "localhost",
 					Port:     3306,
@@ -145,7 +177,8 @@ func TestValidate_DatabaseConfigRequired(t *testing.T) {
 		{
 			name: "Missing DB username",
 			config: &Config{
-				App: AppConfig{Env: "dev", Port: 8080},
+				App:      AppConfig{Env: "dev", Port: 8080},
+				Telegram: TelegramConfig{Bot: BotConfig{Token: "test_token"}},
 				Database: DatabaseConfig{
 					Host:     "localhost",
 					Port:     3306,
@@ -174,7 +207,8 @@ func TestValidate_InvalidPorts(t *testing.T) {
 		{
 			name: "App port too low",
 			config: &Config{
-				App: AppConfig{Env: "dev", Port: 0},
+				App:      AppConfig{Env: "dev", Port: 0},
+				Telegram: TelegramConfig{Bot: BotConfig{Token: "test_token"}},
 				Database: DatabaseConfig{
 					Host: "localhost", Port: 3306, Name: "testdb", Username: "testuser",
 				},
@@ -183,7 +217,8 @@ func TestValidate_InvalidPorts(t *testing.T) {
 		{
 			name: "App port too high",
 			config: &Config{
-				App: AppConfig{Env: "dev", Port: 70000},
+				App:      AppConfig{Env: "dev", Port: 70000},
+				Telegram: TelegramConfig{Bot: BotConfig{Token: "test_token"}},
 				Database: DatabaseConfig{
 					Host: "localhost", Port: 3306, Name: "testdb", Username: "testuser",
 				},
@@ -192,7 +227,8 @@ func TestValidate_InvalidPorts(t *testing.T) {
 		{
 			name: "DB port too low",
 			config: &Config{
-				App: AppConfig{Env: "dev", Port: 8080},
+				App:      AppConfig{Env: "dev", Port: 8080},
+				Telegram: TelegramConfig{Bot: BotConfig{Token: "test_token"}},
 				Database: DatabaseConfig{
 					Host: "localhost", Port: 0, Name: "testdb", Username: "testuser",
 				},
@@ -201,7 +237,8 @@ func TestValidate_InvalidPorts(t *testing.T) {
 		{
 			name: "DB port too high",
 			config: &Config{
-				App: AppConfig{Env: "dev", Port: 8080},
+				App:      AppConfig{Env: "dev", Port: 8080},
+				Telegram: TelegramConfig{Bot: BotConfig{Token: "test_token"}},
 				Database: DatabaseConfig{
 					Host: "localhost", Port: 999999, Name: "testdb", Username: "testuser",
 				},
