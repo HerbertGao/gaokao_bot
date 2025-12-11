@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 	"github.com/herbertgao/gaokao_bot/internal/model"
@@ -293,8 +294,11 @@ func validateTemplateContent(content string) error {
 		return fmt.Errorf("模板内容不能为空")
 	}
 
-	if len(content) > MaxTemplateContentLength {
-		return fmt.Errorf("模板内容不能超过 %d 字符", MaxTemplateContentLength)
+	// 使用 utf8.RuneCountInString 正确计算字符数（而不是字节数）
+	// 对于中文字符，每个字符占 3 字节，使用 len() 会导致错误计数
+	charCount := utf8.RuneCountInString(content)
+	if charCount > MaxTemplateContentLength {
+		return fmt.Errorf("模板内容不能超过 %d 字符（当前 %d 字符）", MaxTemplateContentLength, charCount)
 	}
 
 	// 必须包含 {exam} 和 {time}
@@ -311,8 +315,10 @@ func validateTemplateContent(content string) error {
 
 // validateTemplateName 验证模板名称
 func validateTemplateName(name string) error {
-	if len(name) > MaxTemplateNameLength {
-		return fmt.Errorf("模板标题不能超过 %d 字符", MaxTemplateNameLength)
+	// 使用 utf8.RuneCountInString 正确计算字符数（而不是字节数）
+	charCount := utf8.RuneCountInString(name)
+	if charCount > MaxTemplateNameLength {
+		return fmt.Errorf("模板标题不能超过 %d 字符（当前 %d 字符）", MaxTemplateNameLength, charCount)
 	}
 	return nil
 }
