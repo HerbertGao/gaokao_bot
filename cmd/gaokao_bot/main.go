@@ -39,7 +39,7 @@ func main() {
 	// 加载配置
 	cfg, err := config.Load(*env)
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		log.Fatalf("加载配置失败: %v", err)
 	}
 
 	// 初始化日志
@@ -48,19 +48,19 @@ func main() {
 	// 初始化数据库
 	db, err := database.NewDatabase(&cfg.Database)
 	if err != nil {
-		logger.Fatalf("Failed to connect database: %v", err)
+		logger.Fatalf("连接数据库失败: %v", err)
 	}
 
 	// 确保数据库连接在程序退出时关闭
 	sqlDB, err := db.DB()
 	if err != nil {
-		logger.Fatalf("Failed to get database instance: %v", err)
+		logger.Fatalf("获取数据库实例失败: %v", err)
 	}
 	defer sqlDB.Close()
 
 	// 初始化 Snowflake
 	if err := util.InitSnowflake(cfg.Snowflake.DatacenterID, cfg.Snowflake.MachineID); err != nil {
-		logger.Fatalf("Failed to init snowflake: %v", err)
+		logger.Fatalf("初始化 Snowflake 失败: %v", err)
 	}
 
 	// 初始化仓储
@@ -80,11 +80,11 @@ func main() {
 		telegramBot, err = telego.NewBot(cfg.Telegram.Bot.Token)
 	} else {
 		// 非生产环境（dev/test）：使用测试服务器 API
-		logger.Infof("Using Telegram test server (env: %s)", cfg.App.Env)
+		logger.Infof("使用 Telegram 测试服务器 (环境: %s)", cfg.App.Env)
 		telegramBot, err = telego.NewBot(cfg.Telegram.Bot.Token, telego.WithTestServerPath())
 	}
 	if err != nil {
-		logger.Fatalf("Failed to create telegram bot: %v", err)
+		logger.Fatalf("创建 Telegram Bot 失败: %v", err)
 	}
 
 	// 初始化消息和内联查询服务
@@ -94,10 +94,10 @@ func main() {
 	// 初始化 Bot 服务
 	botService := service.NewBotService(telegramBot, messageService, inlineQueryService, logger, cfg.Telegram.MiniApp.URL)
 
-	// 初始化高考 Bot
+	// 初始化高考倒计时 Bot
 	gaokaoBot, err := bot.NewGaokaoBot(telegramBot, &cfg.Telegram, botService, logger)
 	if err != nil {
-		logger.Fatalf("Failed to initialize bot: %v", err)
+		logger.Fatalf("初始化 Bot 失败: %v", err)
 	}
 
 	// 初始化定时任务
@@ -105,7 +105,7 @@ func main() {
 	if cfg.Task.DailySend.Enabled {
 		dailyTask = task.NewDailySendTask(telegramBot, examDateService, userTemplateService, sendChatService, logger)
 		if err := dailyTask.Start(cfg.Task.DailySend.Cron); err != nil {
-			logger.Fatalf("Failed to start daily task: %v", err)
+			logger.Fatalf("启动定时任务失败: %v", err)
 		}
 	}
 
@@ -122,16 +122,16 @@ func main() {
 
 	// 在 goroutine 中启动 HTTP 服务器
 	go func() {
-		logger.Infof("Starting HTTP server on port %d...", cfg.App.Port)
+		logger.Infof("正在启动 HTTP 服务器，端口: %d...", cfg.App.Port)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatalf("HTTP server error: %v", err)
+			logger.Fatalf("HTTP 服务器错误: %v", err)
 		}
 	}()
 
 	// 启动 Bot
-	logger.Info("Starting Gaokao Bot...")
+	logger.Info("正在启动高考倒计时 Bot...")
 	if err := gaokaoBot.Start(); err != nil {
-		logger.Fatalf("Bot error: %v", err)
+		logger.Fatalf("Bot 错误: %v", err)
 	}
 
 	// 等待退出信号
@@ -139,13 +139,13 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	logger.Info("Shutting down...")
+	logger.Info("正在关闭...")
 
 	// 停止 HTTP 服务器
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := httpServer.Shutdown(ctx); err != nil {
-		logger.Errorf("HTTP server shutdown error: %v", err)
+		logger.Errorf("HTTP 服务器关闭错误: %v", err)
 	}
 
 	// 停止速率限制器
@@ -159,7 +159,7 @@ func main() {
 		dailyTask.Stop()
 	}
 
-	logger.Info("Gaokao Bot stopped")
+	logger.Info("高考倒计时 Bot 已停止")
 }
 
 func initLogger(cfg config.LogConfig) *logrus.Logger {

@@ -50,14 +50,14 @@ func (t *DailySendTask) Start(cronExpr string) error {
 	}
 
 	t.cron.Start()
-	t.logger.Info("Daily send task started")
+	t.logger.Info("每日发送任务已启动")
 	return nil
 }
 
 // Stop 停止定时任务
 func (t *DailySendTask) Stop() {
 	t.cron.Stop()
-	t.logger.Info("Daily send task stopped")
+	t.logger.Info("每日发送任务已停止")
 }
 
 // execute 执行任务
@@ -67,7 +67,7 @@ func (t *DailySendTask) execute() {
 	// 获取符合条件的考试
 	exams, err := t.examDateService.GetExamsInRange(now)
 	if err != nil {
-		t.logger.Errorf("Failed to get exams: %v", err)
+		t.logger.Errorf("获取考试列表失败: %v", err)
 		return
 	}
 
@@ -83,7 +83,7 @@ func (t *DailySendTask) execute() {
 		// 获取默认模板
 		template, err := t.userTemplateService.GetDefaultTemplate()
 		if err != nil {
-			t.logger.Errorf("Failed to get default template: %v", err)
+			t.logger.Errorf("获取默认模板失败: %v", err)
 			continue
 		}
 
@@ -98,7 +98,7 @@ func (t *DailySendTask) execute() {
 		// 获取发送目标
 		chats, err := t.sendChatService.GetAll()
 		if err != nil {
-			t.logger.Errorf("Failed to get chat list: %v", err)
+			t.logger.Errorf("获取聊天列表失败: %v", err)
 			continue
 		}
 
@@ -106,7 +106,7 @@ func (t *DailySendTask) execute() {
 		for _, chat := range chats {
 			chatID, err := strconv.ParseInt(chat.ChatID, 10, 64)
 			if err != nil {
-				t.logger.Errorf("Invalid chat ID %s: %v", chat.ChatID, err)
+				t.logger.Errorf("无效的聊天ID %s: %v", chat.ChatID, err)
 				continue
 			}
 
@@ -116,7 +116,7 @@ func (t *DailySendTask) execute() {
 			))
 
 			if err != nil {
-				t.logger.Errorf("Failed to send to chat %s: %v", chat.ChatID, err)
+				t.logger.Errorf("发送消息到聊天 %s 失败: %v", chat.ChatID, err)
 			} else if t.logger.Level >= logrus.DebugLevel {
 				// Debug 模式下打印发送的消息
 				t.logger.Debugf("[Telegram] -> Sent daily task message to Chat %d (MsgID: %d)",

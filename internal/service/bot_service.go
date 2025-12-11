@@ -77,7 +77,7 @@ func (s *BotService) HandleInlineQuery(bot *telego.Bot, query *telego.InlineQuer
 	})
 
 	if err != nil {
-		s.logger.Errorf("Failed to answer inline query: %v", err)
+		s.logger.Errorf("回复内联查询失败: %v", err)
 	} else if s.logger.Level >= logrus.DebugLevel {
 		// Debug 模式下打印内联查询回复
 		s.logger.Debugf("[Telegram] -> Answered inline query (ID: %s) with %d results",
@@ -118,7 +118,7 @@ func (s *BotService) handleCommand(msg *telego.Message) {
 	}
 
 	if err != nil {
-		s.logger.Errorf("Command error: %v", err)
+		s.logger.Errorf("命令执行错误: %v", err)
 		response = "处理命令时出错，请稍后重试"
 	}
 
@@ -132,7 +132,7 @@ func (s *BotService) handleCommand(msg *telego.Message) {
 	))
 
 	if err != nil {
-		s.logger.Errorf("Failed to send message: %v", err)
+		s.logger.Errorf("发送消息失败: %v", err)
 	} else if s.logger.Level >= logrus.DebugLevel {
 		// Debug 模式下打印发送的消息
 		s.logger.Debugf("[Telegram] -> Sent message to Chat %d (MsgID: %d): %s",
@@ -170,7 +170,7 @@ func (s *BotService) handleDebugCommand(msg *telego.Message) {
 	})
 
 	if err != nil {
-		s.logger.Errorf("Failed to send debug message: %v", err)
+		s.logger.Errorf("发送调试消息失败: %v", err)
 	} else if s.logger.Level >= logrus.DebugLevel {
 		// Debug 模式下打印发送的消息
 		s.logger.Debugf("[Telegram] -> Sent /debug response to Chat %d (MsgID: %d) with WebApp button",
@@ -204,7 +204,7 @@ func (s *BotService) handleTemplateCommand(msg *telego.Message) {
 	})
 
 	if err != nil {
-		s.logger.Errorf("Failed to send template message: %v", err)
+		s.logger.Errorf("发送模板消息失败: %v", err)
 	} else if s.logger.Level >= logrus.DebugLevel {
 		// Debug 模式下打印发送的消息
 		s.logger.Debugf("[Telegram] -> Sent /template response to Chat %d (MsgID: %d) with WebApp button",

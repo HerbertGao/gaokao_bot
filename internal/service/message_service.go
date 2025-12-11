@@ -44,7 +44,7 @@ func (s *MessageService) GetCountDownMessage(msg *telego.Message) (string, error
 		if y, err := strconv.Atoi(text); err == nil && y >= 2018 && y <= 2100 {
 			examList, err = s.examDateService.GetExamByYear(y)
 			if err != nil {
-				s.logger.Errorf("Failed to get exam by year %d: %v", y, err)
+				s.logger.Errorf("按年份 %d 查询考试失败: %v", y, err)
 				return "查询考试信息失败", err
 			}
 			if len(examList) == 0 {
@@ -57,7 +57,7 @@ func (s *MessageService) GetCountDownMessage(msg *telego.Message) (string, error
 		// 没有参数时，获取当前时间范围内的所有考试
 		examList, err = s.examDateService.GetExamsInRange(now)
 		if err != nil {
-			s.logger.Errorf("Failed to get exams in range: %v", err)
+			s.logger.Errorf("查询时间范围内的考试失败: %v", err)
 			return "查询考试信息失败", err
 		}
 	}
@@ -70,7 +70,7 @@ func (s *MessageService) GetCountDownMessage(msg *telego.Message) (string, error
 	// 获取默认模板
 	template, err := s.userTemplateService.GetDefaultTemplate()
 	if err != nil {
-		s.logger.Errorf("Failed to get default template: %v", err)
+		s.logger.Errorf("获取默认模板失败: %v", err)
 		return "获取模板失败", err
 	}
 
