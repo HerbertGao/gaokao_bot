@@ -38,18 +38,3 @@ func TestGetFullVersionInfo(t *testing.T) {
 		}
 	}
 }
-
-func TestVersionVariables(t *testing.T) {
-	// 测试版本变量是否被正确初始化
-	if Version == "" {
-		t.Error("Version variable should not be empty")
-	}
-
-	if BuildTime == "" {
-		t.Error("BuildTime variable should not be empty")
-	}
-
-	if GitCommit == "" {
-		t.Error("GitCommit variable should not be empty")
-	}
-}

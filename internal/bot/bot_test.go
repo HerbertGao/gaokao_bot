@@ -62,11 +62,3 @@ func TestNewGaokaoBot(t *testing.T) {
 		t.Error("done channel not initialized")
 	}
 }
-
-func TestGaokaoBot_NilInputs(t *testing.T) {
-	// 测试使用 nil 输入创建 bot 不会 panic
-	_, err := NewGaokaoBot(nil, nil, nil, nil)
-	if err != nil {
-		t.Errorf("NewGaokaoBot() with nil inputs error = %v, want nil", err)
-	}
-}

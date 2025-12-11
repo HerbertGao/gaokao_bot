@@ -6,35 +6,11 @@ import (
 )
 
 func TestInitSnowflake(t *testing.T) {
-	tests := []struct {
-		name         string
-		datacenterID int64
-		machineID    int64
-		wantErr      bool
-	}{
-		{
-			name:         "Valid initialization with datacenter 0 machine 0",
-			datacenterID: 0,
-			machineID:    0,
-			wantErr:      false,
-		},
-		{
-			name:         "Valid initialization with datacenter 1 machine 1",
-			datacenterID: 1,
-			machineID:    1,
-			wantErr:      false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// 重置 node 和 once 以便每个测试独立
-			// 注意：由于 once 的特性，实际上只会初始化一次
-			err := InitSnowflake(tt.datacenterID, tt.machineID)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("InitSnowflake() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+	// 注意：由于 sync.Once 的特性，InitSnowflake 在同一进程中只会执行一次
+	// 因此只测试一次调用即可
+	err := InitSnowflake(0, 1)
+	if err != nil {
+		t.Errorf("InitSnowflake() error = %v, want nil", err)
 	}
 }
 
@@ -115,17 +91,4 @@ func TestGenerateID(t *testing.T) {
 			t.Errorf("Expected %d unique IDs in concurrent test, got %d", totalIDs, len(ids))
 		}
 	})
-}
-
-func TestGenerateID_Uninitialized(t *testing.T) {
-	// 注意：由于 sync.Once 的特性，在同一进程中无法重置 snowflake 初始化状态
-	// 此测试仅作文档说明：如果 snowflake 未初始化，GenerateID 应返回错误
-	// 实际测试需要在独立的进程中运行
-	t.Skip("Cannot test uninitialized scenario in same process due to sync.Once limitation")
-
-	// 如果能重置，预期行为应该是：
-	// _, err := GenerateID()
-	// if err == nil {
-	//     t.Error("GenerateID() should return error when snowflake is not initialized")
-	// }
 }
