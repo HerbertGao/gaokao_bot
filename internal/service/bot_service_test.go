@@ -22,7 +22,7 @@ func TestNewBotService(t *testing.T) {
 	service := NewBotService(nil, messageService, inlineQueryService, logger, miniAppURL)
 
 	if service == nil {
-		t.Error("NewBotService() returned nil")
+		t.Fatal("NewBotService() returned nil")
 	}
 
 	if service.miniAppURL != miniAppURL {
