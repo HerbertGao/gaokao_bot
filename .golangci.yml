@@ -1,136 +1,130 @@
-# golangci-lint 配置文件
-# 文档: https://golangci-lint.run/usage/configuration/
+# golangci-lint v2 配置文件
+# 文档: https://golangci-lint.run/docs/configuration/file/
 
-# 配置版本 (golangci-lint v2.x 要求)
-version: 2
+version: "2"
 
 run:
-  # 超时时间
   timeout: 5m
-  # 要检查的目录
   tests: true
-  # 构建标签
-  build-tags: []
-  # 跳过的目录
-  skip-dirs:
-    - vendor
-    - bin
-    - dist
-  # 跳过的文件
-  skip-files: []
+  go: '1.25'
 
-# 所有可用的设置请参考 https://golangci-lint.run/usage/linters
 linters:
-  disable-all: true
+  # 默认启用标准 linters
+  default: standard
+
+  # 额外启用的 linters
   enable:
-    # 默认启用的 linters
     - errcheck      # 检查未检查的错误
     - gosimple      # 简化代码
     - govet         # 报告可疑的构造
     - ineffassign   # 检测无效的赋值
     - staticcheck   # 静态分析
     - unused        # 检查未使用的常量、变量、函数和类型
-
-    # 额外推荐的 linters
     - gofmt         # 检查代码格式
     - goimports     # 检查 import 格式
     - misspell      # 拼写检查
-    - revive        # 快速、可配置、可扩展的 Go linter
+    - revive        # Go linter
     - gosec         # 安全检查
     - unconvert     # 检查不必要的类型转换
     - unparam       # 检查未使用的函数参数
     - goconst       # 检查重复的字符串常量
     - gocyclo       # 计算代码复杂度
 
-linters-settings:
-  errcheck:
-    # 忽略这些函数的错误返回
-    exclude-functions:
-      - (io.Closer).Close
-      - (*database/sql.Rows).Close
+  # Linter 特定设置
+  settings:
+    errcheck:
+      exclude-functions:
+        - (io.Closer).Close
+        - (*database/sql.Rows).Close
 
-  govet:
-    # 启用所有检查
-    enable-all: true
-    # 禁用某些检查
-    disable:
-      - shadow  # 变量遮蔽检查（可能过于严格）
+    govet:
+      enable-all: true
+      disable:
+        - shadow  # 变量遮蔽检查（可能过于严格）
 
-  gocyclo:
-    # 最大圈复杂度
-    min-complexity: 15
+    gocyclo:
+      min-complexity: 15
 
-  goconst:
-    # 最小字符串长度
-    min-len: 3
-    # 最小出现次数
-    min-occurrences: 3
+    goconst:
+      min-len: 3
+      min-occurrences: 3
 
-  misspell:
-    locale: US
+    misspell:
+      locale: US
 
-  revive:
-    # 启用所有规则
-    enable-all-rules: false
+    revive:
+      enable-all-rules: false
+      rules:
+        - name: exported
+          disabled: false
+        - name: package-comments
+          disabled: true  # 不强制要求包注释
+        - name: context-as-argument
+          disabled: false
+        - name: error-return
+          disabled: false
+        - name: error-strings
+          disabled: false
+        - name: error-naming
+          disabled: false
+        - name: if-return
+          disabled: false
+        - name: var-naming
+          disabled: false
+        - name: range
+          disabled: false
+        - name: receiver-naming
+          disabled: false
+        - name: indent-error-flow
+          disabled: false
+
+    gosec:
+      excludes:
+        - G404  # 使用弱随机数生成器（在非安全关键场景可接受）
+      severity: medium
+      confidence: medium
+
+  # 排除规则
+  exclusions:
+    generated: strict
+    warn-unused: true
+
+    # 排除规则
     rules:
-      - name: exported
-        disabled: false
-      - name: package-comments
-        disabled: true  # 不强制要求包注释
-      - name: context-as-argument
-        disabled: false
-      - name: error-return
-        disabled: false
-      - name: error-strings
-        disabled: false
-      - name: error-naming
-        disabled: false
-      - name: if-return
-        disabled: false
-      - name: var-naming
-        disabled: false
-      - name: range
-        disabled: false
-      - name: receiver-naming
-        disabled: false
-      - name: indent-error-flow
-        disabled: false
+      # 排除测试文件的某些检查
+      - path: _test\.go
+        linters:
+          - gocyclo
+          - errcheck
+          - gosec
+          - unparam
 
-  gosec:
-    # 要排除的规则 ID
-    excludes:
-      - G404  # 使用弱随机数生成器（在非安全关键场景可接受）
-    # 严重性级别
-    severity: medium
-    confidence: medium
+      # 排除 main 函数的未使用参数检查
+      - path: cmd/
+        linters:
+          - unparam
+
+      # 排除生成的文件
+      - path: (^|/)vendor/
+        linters:
+          - errcheck
+          - gosimple
+          - govet
+          - ineffassign
+          - staticcheck
+          - unused
 
 issues:
-  # 排除某些 linters 的特定问题
-  exclude-rules:
-    # 排除测试文件的某些检查
-    - path: _test\.go
-      linters:
-        - gocyclo
-        - errcheck
-        - gosec
-        - unparam
-
-    # 排除 main 函数的未使用参数检查
-    - path: cmd/
-      linters:
-        - unparam
-
-    # 排除生成的文件
-    - path: (^|/)vendor/
-      linters:
-        - all
-
-  # 最大问题数（0 = 无限制）
   max-issues-per-linter: 0
   max-same-issues: 0
-
-  # 显示完整的问题文本
   new: false
 
-  # 修复问题（谨慎使用）
-  fix: false
+output:
+  formats:
+    text:
+      path: stdout
+      print-linter-name: true
+  sort-order:
+    - linter
+    - severity
+    - file
