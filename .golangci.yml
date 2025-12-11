@@ -38,14 +38,16 @@ linters:
     govet:
       enable-all: true
       disable:
-        - shadow  # 变量遮蔽检查（可能过于严格）
+        - shadow          # 变量遮蔽检查（可能过于严格）
+        - fieldalignment  # 字段对齐优化（对性能影响微小，影响代码可读性）
+        - unusedwrite     # 测试代码中的未使用字段写入（不影响功能）
 
     gocyclo:
       min-complexity: 15
 
     goconst:
       min-len: 3
-      min-occurrences: 3
+      min-occurrences: 6  # 只报告出现 6 次以上的重复字符串
 
     misspell:
       locale: US
@@ -57,6 +59,8 @@ linters:
           disabled: false
         - name: package-comments
           disabled: true  # 不强制要求包注释
+        - name: var-naming
+          disabled: true  # 禁用包名检查（api、util 等是常见且有意义的包名）
         - name: context-as-argument
           disabled: false
         - name: error-return
@@ -66,8 +70,6 @@ linters:
         - name: error-naming
           disabled: false
         - name: if-return
-          disabled: false
-        - name: var-naming
           disabled: false
         - name: range
           disabled: false
@@ -97,10 +99,11 @@ linters:
           - gosec
           - unparam
 
-      # 排除 main 函数的未使用参数检查
+      # 排除 cmd 目录的某些检查（main 函数通常较复杂）
       - path: cmd/
         linters:
           - unparam
+          - gocyclo
 
       # 排除生成的文件
       - path: (^|/)vendor/

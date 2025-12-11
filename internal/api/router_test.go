@@ -12,6 +12,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const testBotToken = "test_token"
+
 func setupTestDB(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
@@ -29,9 +31,8 @@ func TestNewRouter(t *testing.T) {
 	db := setupTestDB(t)
 	repo := repository.NewUserTemplateRepository(db)
 	templateService := service.NewUserTemplateService(repo)
-	botToken := "test_token"
 
-	router, rateLimiter := NewRouter(db, botToken, templateService, true, false)
+	router, rateLimiter := NewRouter(db, testBotToken, templateService, true, false)
 	defer rateLimiter.Stop()
 
 	if router == nil {
@@ -47,9 +48,8 @@ func TestHealthCheck(t *testing.T) {
 	db := setupTestDB(t)
 	repo := repository.NewUserTemplateRepository(db)
 	templateService := service.NewUserTemplateService(repo)
-	botToken := "test_token"
 
-	router, rateLimiter := NewRouter(db, botToken, templateService, true, false)
+	router, rateLimiter := NewRouter(db, testBotToken, templateService, true, false)
 	defer rateLimiter.Stop()
 
 	req, _ := http.NewRequest(http.MethodGet, "/health", nil)
@@ -65,9 +65,8 @@ func TestHealthCheck_ResponseFormat(t *testing.T) {
 	db := setupTestDB(t)
 	repo := repository.NewUserTemplateRepository(db)
 	templateService := service.NewUserTemplateService(repo)
-	botToken := "test_token"
 
-	router, rateLimiter := NewRouter(db, botToken, templateService, true, false)
+	router, rateLimiter := NewRouter(db, testBotToken, templateService, true, false)
 	defer rateLimiter.Stop()
 
 	req, _ := http.NewRequest(http.MethodGet, "/health", nil)
@@ -89,10 +88,9 @@ func TestRouter_WithLogger(t *testing.T) {
 	db := setupTestDB(t)
 	repo := repository.NewUserTemplateRepository(db)
 	templateService := service.NewUserTemplateService(repo)
-	botToken := "test_token"
 
 	// 测试启用日志
-	router, rateLimiter := NewRouter(db, botToken, templateService, true, true)
+	router, rateLimiter := NewRouter(db, testBotToken, templateService, true, true)
 	defer rateLimiter.Stop()
 
 	if router == nil {
@@ -104,10 +102,9 @@ func TestRouter_WithoutLogger(t *testing.T) {
 	db := setupTestDB(t)
 	repo := repository.NewUserTemplateRepository(db)
 	templateService := service.NewUserTemplateService(repo)
-	botToken := "test_token"
 
 	// 测试禁用日志
-	router, rateLimiter := NewRouter(db, botToken, templateService, true, false)
+	router, rateLimiter := NewRouter(db, testBotToken, templateService, true, false)
 	defer rateLimiter.Stop()
 
 	if router == nil {
