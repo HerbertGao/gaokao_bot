@@ -16,7 +16,7 @@ func main() {
 	flag.Parse()
 
 	// 加载配置
-	cfg, err := config.LoadConfig(*env)
+	cfg, err := config.Load(*env)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
 		os.Exit(1)

@@ -100,7 +100,7 @@ func (b *GaokaoBot) Start() error {
 			if b.logger.Level >= logrus.DebugLevel {
 				var username string
 				var userID int64
-				if update.InlineQuery.From != nil {
+				if update.InlineQuery.From.ID != 0 {
 					username = update.InlineQuery.From.Username
 					userID = update.InlineQuery.From.ID
 				} else {
@@ -132,7 +132,6 @@ func (b *GaokaoBot) Start() error {
 func (b *GaokaoBot) Stop() {
 	b.logger.Info("Stopping bot...")
 	b.handler.Stop()
-	b.bot.StopLongPolling()
 	<-b.done // 等待 handler 完全停止
 	b.logger.Info("Bot stopped")
 }
