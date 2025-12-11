@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,7 +19,19 @@ import (
 const (
 	// InitDataMaxAge Telegram initData 最大有效期（秒）
 	InitDataMaxAge = 86400 // 24小时
+	// DefaultTestUserID 默认测试用户 ID（用于开发环境）
+	DefaultTestUserID = 123456789
 )
+
+// getTestUserID 从环境变量获取测试用户 ID，如果未设置则使用默认值
+func getTestUserID() int64 {
+	if envUserID := os.Getenv("TEST_USER_ID"); envUserID != "" {
+		if userID, err := strconv.ParseInt(envUserID, 10, 64); err == nil {
+			return userID
+		}
+	}
+	return DefaultTestUserID
+}
 
 // TelegramAuthMiddleware Telegram Mini App 认证中间件
 func TelegramAuthMiddleware(botToken string, skipValidation bool) gin.HandlerFunc {
@@ -28,8 +42,8 @@ func TelegramAuthMiddleware(botToken string, skipValidation bool) gin.HandlerFun
 		// 开发模式：跳过验证
 		if skipValidation {
 			if initData == "" {
-				// 没有 Init Data，使用测试用户 ID
-				c.Set("user_id", int64(0))
+				// 没有 Init Data，使用测试用户 ID（从环境变量或默认值）
+				c.Set("user_id", getTestUserID())
 			} else {
 				// 尝试解析用户 ID（不验证签名）
 				values, err := url.ParseQuery(initData)
@@ -41,10 +55,10 @@ func TelegramAuthMiddleware(botToken string, skipValidation bool) gin.HandlerFun
 					if err := json.Unmarshal([]byte(userStr), &userData); err == nil && userData.ID > 0 {
 						c.Set("user_id", userData.ID)
 					} else {
-						c.Set("user_id", int64(0))
+						c.Set("user_id", getTestUserID())
 					}
 				} else {
-					c.Set("user_id", int64(0))
+					c.Set("user_id", getTestUserID())
 				}
 			}
 			c.Next()

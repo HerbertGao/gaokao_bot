@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -115,8 +116,11 @@ func RateLimitMiddleware(rate, burst int) (gin.HandlerFunc, *RateLimiter) {
 
 	handler := func(c *gin.Context) {
 		// 使用 user_id 作为限制键，如果没有则使用 IP
-		key := c.GetString("user_id")
-		if key == "" {
+		var key string
+		userID, exists := c.Get("user_id")
+		if exists && userID != nil {
+			key = fmt.Sprintf("user_%v", userID)
+		} else {
 			key = c.ClientIP()
 		}
 
