@@ -138,7 +138,41 @@ func Load(env string) (*Config, error) {
 		},
 	}
 
+	// 验证关键配置
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("配置验证失败: %w", err)
+	}
+
 	return cfg, nil
+}
+
+// Validate 验证配置
+func (c *Config) Validate() error {
+	// 验证 Telegram Bot Token（生产环境必需）
+	if c.App.Env == "prod" && c.Telegram.Bot.Token == "" {
+		return fmt.Errorf("生产环境必须配置 TELEGRAM_BOT_TOKEN")
+	}
+
+	// 验证数据库配置
+	if c.Database.Host == "" {
+		return fmt.Errorf("必须配置数据库主机 (DB_HOST)")
+	}
+	if c.Database.Name == "" {
+		return fmt.Errorf("必须配置数据库名称 (DB_NAME)")
+	}
+	if c.Database.Username == "" {
+		return fmt.Errorf("必须配置数据库用户名 (DB_USERNAME)")
+	}
+
+	// 验证端口范围
+	if c.App.Port < 1 || c.App.Port > 65535 {
+		return fmt.Errorf("应用端口必须在 1-65535 范围内，当前值: %d", c.App.Port)
+	}
+	if c.Database.Port < 1 || c.Database.Port > 65535 {
+		return fmt.Errorf("数据库端口必须在 1-65535 范围内，当前值: %d", c.Database.Port)
+	}
+
+	return nil
 }
 
 // getEnv 获取环境变量，如果不存在则返回默认值

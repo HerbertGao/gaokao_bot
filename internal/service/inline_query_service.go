@@ -7,6 +7,7 @@ import (
 
 	"github.com/herbertgao/gaokao_bot/internal/model"
 	"github.com/herbertgao/gaokao_bot/internal/util"
+	"github.com/herbertgao/gaokao_bot/pkg/constant"
 	"github.com/mymmrac/telego"
 	"github.com/sirupsen/logrus"
 )
@@ -40,7 +41,7 @@ func (s *InlineQueryService) GetInlineQueryResults(query *telego.InlineQuery) []
 
 	// 解析年份
 	if query.Query != "" {
-		if y, err := strconv.Atoi(query.Query); err == nil && y >= 2018 && y <= 2100 {
+		if y, err := strconv.Atoi(query.Query); err == nil && y >= constant.MinExamYear && y <= constant.MaxExamYear {
 			examList, err = s.examDateService.GetExamByYear(y)
 			if err != nil {
 				s.logger.Errorf("按年份 %d 查询考试失败: %v", y, err)
