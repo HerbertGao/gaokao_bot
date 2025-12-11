@@ -13,14 +13,13 @@ linters:
   default: standard
 
   # 额外启用的 linters
+  # 注意: gosimple 在 v2 中已合并到 staticcheck，gofmt/goimports 是 formatters 而非 linters
   enable:
     - errcheck      # 检查未检查的错误
-    - gosimple      # 简化代码
     - govet         # 报告可疑的构造
     - ineffassign   # 检测无效的赋值
-    - staticcheck   # 静态分析
+    - staticcheck   # 静态分析（包含 gosimple 功能）
     - unused        # 检查未使用的常量、变量、函数和类型
-    - goimports     # 检查 import 格式
     - misspell      # 拼写检查
     - revive        # Go linter
     - gosec         # 安全检查
