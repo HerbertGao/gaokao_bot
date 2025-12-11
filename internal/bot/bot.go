@@ -2,12 +2,18 @@ package bot
 
 import (
 	"context"
+	"time"
 
 	"github.com/herbertgao/gaokao_bot/internal/config"
 	"github.com/herbertgao/gaokao_bot/internal/service"
 	"github.com/mymmrac/telego"
 	"github.com/mymmrac/telego/telegohandler"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	// DefaultContextTimeout 默认上下文超时时间
+	DefaultContextTimeout = 10 * time.Second
 )
 
 // GaokaoBot 高考Bot
@@ -39,14 +45,17 @@ func NewGaokaoBot(
 
 // Start 启动Bot
 func (b *GaokaoBot) Start() error {
-	botUser, err := b.bot.GetMe(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+	defer cancel()
+
+	botUser, err := b.bot.GetMe(ctx)
 	if err != nil {
 		return err
 	}
 	b.logger.Infof("Bot authorized on account %s", botUser.Username)
 
 	// 启动长轮询
-	updates, err := b.bot.UpdatesViaLongPolling(context.Background(), nil)
+	updates, err := b.bot.UpdatesViaLongPolling(nil, nil)
 	if err != nil {
 		return err
 	}
@@ -64,9 +73,18 @@ func (b *GaokaoBot) Start() error {
 		if update.Message != nil {
 			// Debug 模式下打印接收到的消息
 			if b.logger.Level >= logrus.DebugLevel {
+				var username string
+				var userID int64
+				if update.Message.From != nil {
+					username = update.Message.From.Username
+					userID = update.Message.From.ID
+				} else {
+					username = "unknown"
+					userID = 0
+				}
 				b.logger.Debugf("[Telegram] <- Received message from @%s (ID: %d, Chat: %d): %s",
-					update.Message.From.Username,
-					update.Message.From.ID,
+					username,
+					userID,
 					update.Message.Chat.ID,
 					update.Message.Text)
 			}
@@ -80,9 +98,18 @@ func (b *GaokaoBot) Start() error {
 		if update.InlineQuery != nil {
 			// Debug 模式下打印接收到的内联查询
 			if b.logger.Level >= logrus.DebugLevel {
+				var username string
+				var userID int64
+				if update.InlineQuery.From != nil {
+					username = update.InlineQuery.From.Username
+					userID = update.InlineQuery.From.ID
+				} else {
+					username = "unknown"
+					userID = 0
+				}
 				b.logger.Debugf("[Telegram] <- Received inline query from @%s (ID: %d): %s",
-					update.InlineQuery.From.Username,
-					update.InlineQuery.From.ID,
+					username,
+					userID,
 					update.InlineQuery.Query)
 			}
 			b.service.HandleInlineQuery(ctx.Bot(), update.InlineQuery)
@@ -91,7 +118,10 @@ func (b *GaokaoBot) Start() error {
 	}, telegohandler.AnyInlineQuery())
 
 	// 开始处理更新
-	go b.handler.Start()
+	go func() {
+		b.handler.Start()
+		close(b.done)
+	}()
 
 	b.logger.Info("Bot started successfully")
 
@@ -100,7 +130,14 @@ func (b *GaokaoBot) Start() error {
 
 // Stop 停止Bot
 func (b *GaokaoBot) Stop() {
+	b.logger.Info("Stopping bot...")
 	b.handler.Stop()
-	close(b.done)
+	b.bot.StopLongPolling()
+	<-b.done // 等待 handler 完全停止
 	b.logger.Info("Bot stopped")
+}
+
+// Wait 等待Bot停止
+func (b *GaokaoBot) Wait() {
+	<-b.done
 }

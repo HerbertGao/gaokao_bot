@@ -12,6 +12,15 @@ import (
 	"github.com/herbertgao/gaokao_bot/internal/util"
 )
 
+const (
+	// MaxTemplatesPerUser 每个用户最多可创建的模板数量
+	MaxTemplatesPerUser = 10
+	// MaxTemplateContentLength 模板内容最大长度
+	MaxTemplateContentLength = 140
+	// MaxTemplateNameLength 模板名称最大长度
+	MaxTemplateNameLength = 20
+)
+
 // TemplateHandler 模板处理器
 type TemplateHandler struct {
 	templateService *service.UserTemplateService
@@ -64,6 +73,24 @@ func (h *TemplateHandler) CreateTemplate(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"error":   fmt.Sprintf("Invalid request: %v", err),
+		})
+		return
+	}
+
+	// 检查用户模板数量限制
+	existingTemplates, err := h.templateService.GetByUserID(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("Failed to check template count: %v", err),
+		})
+		return
+	}
+
+	if len(existingTemplates) >= MaxTemplatesPerUser {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("模板数量已达上限（最多 %d 个）", MaxTemplatesPerUser),
 		})
 		return
 	}
@@ -258,8 +285,8 @@ func validateTemplateContent(content string) error {
 		return fmt.Errorf("模板内容不能为空")
 	}
 
-	if len(content) > 140 {
-		return fmt.Errorf("模板内容不能超过 140 字符")
+	if len(content) > MaxTemplateContentLength {
+		return fmt.Errorf("模板内容不能超过 %d 字符", MaxTemplateContentLength)
 	}
 
 	// 必须包含 {exam} 和 {time}
@@ -276,8 +303,8 @@ func validateTemplateContent(content string) error {
 
 // validateTemplateName 验证模板名称
 func validateTemplateName(name string) error {
-	if len(name) > 20 {
-		return fmt.Errorf("模板标题不能超过 20 字符")
+	if len(name) > MaxTemplateNameLength {
+		return fmt.Errorf("模板标题不能超过 %d 字符", MaxTemplateNameLength)
 	}
 	return nil
 }

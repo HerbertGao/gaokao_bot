@@ -34,9 +34,10 @@ func NewRouter(
 	// API 路由组
 	api := router.Group("/api")
 	{
-		// 模板相关 API（需要认证）
+		// 模板相关 API（需要认证和速率限制）
 		templates := api.Group("/templates")
 		templates.Use(middleware.TelegramAuthMiddleware(botToken, skipValidation))
+		templates.Use(middleware.RateLimitMiddleware(10, 20)) // 每秒10个请求，突发20个
 		{
 			templates.GET("", templateHandler.GetTemplates)
 			templates.POST("", templateHandler.CreateTemplate)

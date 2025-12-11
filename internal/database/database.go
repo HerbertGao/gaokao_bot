@@ -12,12 +12,13 @@ import (
 
 // NewDatabase 创建数据库连接
 func NewDatabase(cfg *config.DatabaseConfig) (*gorm.DB, error) {
-	// 对时区进行URL编码
+	// 对时区和密码进行URL编码
 	loc := url.QueryEscape(cfg.Loc)
+	password := url.QueryEscape(cfg.Password)
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%t&loc=%s",
 		cfg.Username,
-		cfg.Password,
+		password,
 		cfg.Host,
 		cfg.Port,
 		cfg.Name,

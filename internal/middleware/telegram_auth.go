@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"sort"
@@ -11,6 +12,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	// InitDataMaxAge Telegram initData 最大有效期（秒）
+	InitDataMaxAge = 86400 // 24小时
 )
 
 // TelegramAuthMiddleware Telegram Mini App 认证中间件
@@ -29,10 +35,11 @@ func TelegramAuthMiddleware(botToken string, skipValidation bool) gin.HandlerFun
 				values, err := url.ParseQuery(initData)
 				if err == nil {
 					userStr := values.Get("user")
-					var userID int64
-					fmt.Sscanf(userStr, `{"id":%d`, &userID)
-					if userID > 0 {
-						c.Set("user_id", userID)
+					var userData struct {
+						ID int64 `json:"id"`
+					}
+					if err := json.Unmarshal([]byte(userStr), &userData); err == nil && userData.ID > 0 {
+						c.Set("user_id", userData.ID)
 					} else {
 						c.Set("user_id", int64(0))
 					}
@@ -99,7 +106,7 @@ func ValidateTelegramInitData(initData, botToken string) (int64, error) {
 	}
 
 	now := time.Now().Unix()
-	if now-authDate > 86400 {
+	if now-authDate > InitDataMaxAge {
 		return 0, fmt.Errorf("init data expired")
 	}
 
@@ -109,11 +116,16 @@ func ValidateTelegramInitData(initData, botToken string) (int64, error) {
 		return 0, fmt.Errorf("missing user data")
 	}
 
-	// 从 user JSON 中提取 id（简单方式）
+	// 从 user JSON 中提取 id
 	// user 格式: {"id":123456789,"first_name":"Test",...}
-	var userID int64
-	if _, err := fmt.Sscanf(userStr, `{"id":%d`, &userID); err != nil {
+	var userData struct {
+		ID int64 `json:"id"`
+	}
+	if err := json.Unmarshal([]byte(userStr), &userData); err != nil {
 		return 0, fmt.Errorf("invalid user data: %w", err)
+	}
+	if userData.ID == 0 {
+		return 0, fmt.Errorf("invalid user ID")
 	}
 
 	// 构建数据字符串进行验证
@@ -125,11 +137,13 @@ func ValidateTelegramInitData(initData, botToken string) (int64, error) {
 	sort.Strings(dataCheckArr)
 	dataCheckString := strings.Join(dataCheckArr, "\n")
 
-	// 计算 secret_key
-	secretKey := sha256.Sum256([]byte(botToken))
+	// 计算 secret_key（根据 Telegram 规范: HMAC_SHA256("WebAppData", botToken)）
+	secretKeyHMAC := hmac.New(sha256.New, []byte("WebAppData"))
+	secretKeyHMAC.Write([]byte(botToken))
+	secretKey := secretKeyHMAC.Sum(nil)
 
 	// 计算 HMAC-SHA256
-	h := hmac.New(sha256.New, secretKey[:])
+	h := hmac.New(sha256.New, secretKey)
 	h.Write([]byte(dataCheckString))
 	calculatedHash := hex.EncodeToString(h.Sum(nil))
 
@@ -138,5 +152,5 @@ func ValidateTelegramInitData(initData, botToken string) (int64, error) {
 		return 0, fmt.Errorf("hash mismatch")
 	}
 
-	return userID, nil
+	return userData.ID, nil
 }

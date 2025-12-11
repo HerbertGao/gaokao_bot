@@ -16,7 +16,7 @@ CREATE TABLE `exam_date` (
   `exam_year_end_date` datetime DEFAULT NULL COMMENT '考试年结束时间',
   `is_delete` tinyint(1) unsigned DEFAULT '0' COMMENT '是否删除',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='高考日期';
 
 -- ----------------------------
 -- Records of exam_date
@@ -119,14 +119,6 @@ CREATE TABLE `send_chat` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='发送对话';
 
 -- ----------------------------
--- Records of send_chat
--- ----------------------------
-BEGIN;
-INSERT INTO `send_chat` (`id`, `chat_id`) VALUES (1, '-1001427397899');
-INSERT INTO `send_chat` (`id`, `chat_id`) VALUES (2, '-1001369745974');
-COMMIT;
-
--- ----------------------------
 -- Table structure for user_template
 -- ----------------------------
 DROP TABLE IF EXISTS `user_template`;
@@ -136,7 +128,7 @@ CREATE TABLE `user_template` (
   `template_name` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '模板名称',
   `template_content` varchar(160) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '模板内容',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='用户模板';
 
 -- ----------------------------
 -- Records of user_template

@@ -3,11 +3,17 @@ package service
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/herbertgao/gaokao_bot/pkg/constant"
 	"github.com/mymmrac/telego"
 	"github.com/mymmrac/telego/telegoutil"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	// DefaultContextTimeout 默认上下文超时时间
+	DefaultContextTimeout = 10 * time.Second
 )
 
 // BotService Bot业务服务
@@ -42,6 +48,11 @@ func (s *BotService) HandleMessage(bot *telego.Bot, msg *telego.Message) {
 		return
 	}
 
+	// 检查消息文本是否为空
+	if msg.Text == "" {
+		return
+	}
+
 	// 处理命令（检查是否以 / 开头）
 	if strings.HasPrefix(msg.Text, "/") {
 		s.handleCommand(msg)
@@ -57,7 +68,10 @@ func (s *BotService) HandleInlineQuery(bot *telego.Bot, query *telego.InlineQuer
 
 	results := s.inlineQueryService.GetInlineQueryResults(query)
 
-	err := s.bot.AnswerInlineQuery(context.Background(), &telego.AnswerInlineQueryParams{
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+	defer cancel()
+
+	err := s.bot.AnswerInlineQuery(ctx, &telego.AnswerInlineQueryParams{
 		InlineQueryID: query.ID,
 		Results:       results,
 	})
@@ -109,7 +123,10 @@ func (s *BotService) handleCommand(msg *telego.Message) {
 	}
 
 	// 发送回复
-	sentMsg, err := s.bot.SendMessage(context.Background(), telegoutil.Message(
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+	defer cancel()
+
+	sentMsg, err := s.bot.SendMessage(ctx, telegoutil.Message(
 		telegoutil.ID(msg.Chat.ID),
 		response,
 	))
@@ -143,7 +160,10 @@ func (s *BotService) handleDebugCommand(msg *telego.Message) {
 	}
 
 	// 发送带按钮的消息
-	sentMsg, err := s.bot.SendMessage(context.Background(), &telego.SendMessageParams{
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+	defer cancel()
+
+	sentMsg, err := s.bot.SendMessage(ctx, &telego.SendMessageParams{
 		ChatID:      telegoutil.ID(msg.Chat.ID),
 		Text:        "点击下方按钮打开调试模式的小程序",
 		ReplyMarkup: keyboard,
@@ -174,7 +194,10 @@ func (s *BotService) handleTemplateCommand(msg *telego.Message) {
 	}
 
 	// 发送带按钮的消息
-	sentMsg, err := s.bot.SendMessage(context.Background(), &telego.SendMessageParams{
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+	defer cancel()
+
+	sentMsg, err := s.bot.SendMessage(ctx, &telego.SendMessageParams{
 		ChatID:      telegoutil.ID(msg.Chat.ID),
 		Text:        "点击下方按钮打开小程序配置你的自定义模板",
 		ReplyMarkup: keyboard,
