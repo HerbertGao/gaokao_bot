@@ -124,11 +124,15 @@ func main() {
 		Handler: router,
 	}
 
+	// 创建错误通道用于 goroutine 错误传递
+	serverErr := make(chan error, 1)
+
 	// 在 goroutine 中启动 HTTP 服务器
 	go func() {
 		logger.Infof("正在启动 HTTP 服务器，端口: %d...", cfg.App.Port)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatalf("HTTP 服务器错误: %v", err)
+			logger.Errorf("HTTP 服务器错误: %v", err)
+			serverErr <- err
 		}
 	}()
 
@@ -138,10 +142,16 @@ func main() {
 		logger.Fatalf("Bot 错误: %v", err)
 	}
 
-	// 等待退出信号
+	// 等待退出信号或服务器错误
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+
+	select {
+	case <-quit:
+		logger.Info("收到退出信号")
+	case err := <-serverErr:
+		logger.Errorf("HTTP 服务器异常退出: %v", err)
+	}
 
 	logger.Info("正在关闭...")
 

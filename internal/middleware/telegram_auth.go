@@ -161,8 +161,8 @@ func ValidateTelegramInitData(initData, botToken string) (int64, error) {
 	h.Write([]byte(dataCheckString))
 	calculatedHash := hex.EncodeToString(h.Sum(nil))
 
-	// 验证 hash
-	if calculatedHash != hash {
+	// 验证 hash（使用常量时间比较防止定时攻击）
+	if !hmac.Equal([]byte(calculatedHash), []byte(hash)) {
 		return 0, fmt.Errorf("签名验证失败")
 	}
 
