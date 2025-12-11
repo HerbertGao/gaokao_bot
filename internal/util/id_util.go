@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/bwmarrin/snowflake"
@@ -23,9 +24,9 @@ func InitSnowflake(datacenterID, machineID int64) error {
 }
 
 // GenerateID 生成 Snowflake ID
-func GenerateID() int64 {
+func GenerateID() (int64, error) {
 	if node == nil {
-		panic("Snowflake not initialized")
+		return 0, fmt.Errorf("snowflake not initialized")
 	}
-	return node.Generate().Int64()
+	return node.Generate().Int64(), nil
 }

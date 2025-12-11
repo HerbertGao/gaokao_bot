@@ -1,6 +1,9 @@
 # golangci-lint 配置文件
 # 文档: https://golangci-lint.run/usage/configuration/
 
+# 配置版本 (golangci-lint v2.x 要求)
+version: 2
+
 run:
   # 超时时间
   timeout: 5m

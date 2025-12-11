@@ -46,7 +46,10 @@ func TestGenerateID(t *testing.T) {
 	}
 
 	t.Run("Generate single ID", func(t *testing.T) {
-		id := GenerateID()
+		id, err := GenerateID()
+		if err != nil {
+			t.Errorf("GenerateID() error = %v, want nil", err)
+		}
 		if id <= 0 {
 			t.Errorf("GenerateID() = %v, want positive number", id)
 		}
@@ -57,7 +60,10 @@ func TestGenerateID(t *testing.T) {
 		ids := make(map[int64]bool)
 
 		for i := 0; i < count; i++ {
-			id := GenerateID()
+			id, err := GenerateID()
+			if err != nil {
+				t.Errorf("GenerateID() error = %v, want nil", err)
+			}
 			if ids[id] {
 				t.Errorf("GenerateID() generated duplicate ID: %v", id)
 			}
@@ -83,7 +89,12 @@ func TestGenerateID(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				for j := 0; j < idsPerGoroutine; j++ {
-					idsChan <- GenerateID()
+					id, err := GenerateID()
+					if err != nil {
+						t.Errorf("GenerateID() error = %v, want nil", err)
+						return
+					}
+					idsChan <- id
 				}
 			}()
 		}
@@ -106,8 +117,15 @@ func TestGenerateID(t *testing.T) {
 	})
 }
 
-func TestGenerateID_Panic(t *testing.T) {
-	// 这个测试无法直接运行，因为我们无法重置 once
-	// 仅作为文档说明：如果未初始化 snowflake，GenerateID 会 panic
-	t.Skip("Cannot test panic scenario due to sync.Once limitation")
+func TestGenerateID_Uninitialized(t *testing.T) {
+	// 注意：由于 sync.Once 的特性，在同一进程中无法重置 snowflake 初始化状态
+	// 此测试仅作文档说明：如果 snowflake 未初始化，GenerateID 应返回错误
+	// 实际测试需要在独立的进程中运行
+	t.Skip("Cannot test uninitialized scenario in same process due to sync.Once limitation")
+
+	// 如果能重置，预期行为应该是：
+	// _, err := GenerateID()
+	// if err == nil {
+	//     t.Error("GenerateID() should return error when snowflake is not initialized")
+	// }
 }

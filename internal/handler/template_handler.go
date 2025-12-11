@@ -125,7 +125,14 @@ func (h *TemplateHandler) CreateTemplate(c *gin.Context) {
 	}
 
 	// 生成 ID
-	id := util.GenerateID()
+	id, err := util.GenerateID()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("生成 ID 失败: %v", err),
+		})
+		return
+	}
 
 	template := &model.UserTemplate{
 		ID:              id,
