@@ -36,7 +36,7 @@ cd gaokao_bot
 go mod download
 
 # Configure environment
-cp configs/.env.example .env
+cp .env.example .env
 # Edit .env with your configuration
 
 # Initialize database
