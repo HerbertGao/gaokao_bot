@@ -64,3 +64,10 @@ func (r *UserTemplateRepository) GetByID(id int64) (*model.UserTemplate, error) 
 
 	return &template, err
 }
+
+// CountByUserID 统计用户的模板数量
+func (r *UserTemplateRepository) CountByUserID(userID int64) (int64, error) {
+	var count int64
+	err := r.db.Model(&model.UserTemplate{}).Where("user_id = ?", userID).Count(&count).Error
+	return count, err
+}

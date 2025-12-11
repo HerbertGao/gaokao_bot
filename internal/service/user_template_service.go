@@ -44,3 +44,8 @@ func (s *UserTemplateService) Delete(id int64) error {
 func (s *UserTemplateService) GetByID(id int64) (*model.UserTemplate, error) {
 	return s.repo.GetByID(id)
 }
+
+// CountByUserID 统计用户的模板数量
+func (s *UserTemplateService) CountByUserID(userID int64) (int64, error) {
+	return s.repo.CountByUserID(userID)
+}

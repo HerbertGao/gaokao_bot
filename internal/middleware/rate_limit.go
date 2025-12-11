@@ -131,7 +131,7 @@ func RateLimitMiddleware(rate, burst int) (gin.HandlerFunc, *RateLimiter) {
 		if !limiter.allow(key) {
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"success": false,
-				"error":   "Rate limit exceeded. Please try again later.",
+				"error":   "请求过于频繁，请稍后再试",
 			})
 			c.Abort()
 			return

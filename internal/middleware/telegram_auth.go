@@ -69,7 +69,7 @@ func TelegramAuthMiddleware(botToken string, skipValidation bool) gin.HandlerFun
 		if initData == "" {
 			c.JSON(401, gin.H{
 				"success": false,
-				"error":   "Missing Telegram init data",
+				"error":   "缺少 Telegram 初始化数据",
 			})
 			c.Abort()
 			return
@@ -80,7 +80,7 @@ func TelegramAuthMiddleware(botToken string, skipValidation bool) gin.HandlerFun
 		if err != nil {
 			c.JSON(401, gin.H{
 				"success": false,
-				"error":   fmt.Sprintf("Invalid Telegram init data: %v", err),
+				"error":   fmt.Sprintf("Telegram 初始化数据验证失败: %v", err),
 			})
 			c.Abort()
 			return
@@ -98,36 +98,36 @@ func ValidateTelegramInitData(initData, botToken string) (int64, error) {
 	// 解析 initData
 	values, err := url.ParseQuery(initData)
 	if err != nil {
-		return 0, fmt.Errorf("failed to parse init data: %w", err)
+		return 0, fmt.Errorf("解析初始化数据失败: %w", err)
 	}
 
 	// 获取 hash
 	hash := values.Get("hash")
 	if hash == "" {
-		return 0, fmt.Errorf("missing hash")
+		return 0, fmt.Errorf("缺少签名哈希")
 	}
 
 	// 获取 auth_date
 	authDateStr := values.Get("auth_date")
 	if authDateStr == "" {
-		return 0, fmt.Errorf("missing auth_date")
+		return 0, fmt.Errorf("缺少认证时间")
 	}
 
 	// 验证时间戳（不超过 24 小时）
 	var authDate int64
 	if _, err := fmt.Sscanf(authDateStr, "%d", &authDate); err != nil {
-		return 0, fmt.Errorf("invalid auth_date: %w", err)
+		return 0, fmt.Errorf("认证时间格式无效: %w", err)
 	}
 
 	now := time.Now().Unix()
 	if now-authDate > InitDataMaxAge {
-		return 0, fmt.Errorf("init data expired")
+		return 0, fmt.Errorf("初始化数据已过期")
 	}
 
 	// 提取用户 ID
 	userStr := values.Get("user")
 	if userStr == "" {
-		return 0, fmt.Errorf("missing user data")
+		return 0, fmt.Errorf("缺少用户数据")
 	}
 
 	// 从 user JSON 中提取 id
@@ -136,10 +136,10 @@ func ValidateTelegramInitData(initData, botToken string) (int64, error) {
 		ID int64 `json:"id"`
 	}
 	if err := json.Unmarshal([]byte(userStr), &userData); err != nil {
-		return 0, fmt.Errorf("invalid user data: %w", err)
+		return 0, fmt.Errorf("用户数据格式无效: %w", err)
 	}
 	if userData.ID == 0 {
-		return 0, fmt.Errorf("invalid user ID")
+		return 0, fmt.Errorf("用户ID无效")
 	}
 
 	// 构建数据字符串进行验证
@@ -163,7 +163,7 @@ func ValidateTelegramInitData(initData, botToken string) (int64, error) {
 
 	// 验证 hash
 	if calculatedHash != hash {
-		return 0, fmt.Errorf("hash mismatch")
+		return 0, fmt.Errorf("签名验证失败")
 	}
 
 	return userData.ID, nil

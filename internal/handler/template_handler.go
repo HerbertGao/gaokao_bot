@@ -61,7 +61,7 @@ func (h *TemplateHandler) GetTemplates(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("Failed to get templates: %v", err),
+			"error":   fmt.Sprintf("获取模板列表失败: %v", err),
 		})
 		return
 	}
@@ -80,22 +80,22 @@ func (h *TemplateHandler) CreateTemplate(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("Invalid request: %v", err),
+			"error":   fmt.Sprintf("请求参数无效: %v", err),
 		})
 		return
 	}
 
-	// 检查用户模板数量限制
-	existingTemplates, err := h.templateService.GetByUserID(userID)
+	// 检查用户模板数量限制（使用 COUNT 查询优化性能）
+	templateCount, err := h.templateService.CountByUserID(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("Failed to check template count: %v", err),
+			"error":   fmt.Sprintf("检查模板数量失败: %v", err),
 		})
 		return
 	}
 
-	if len(existingTemplates) >= MaxTemplatesPerUser {
+	if templateCount >= MaxTemplatesPerUser {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"error":   fmt.Sprintf("模板数量已达上限（最多 %d 个）", MaxTemplatesPerUser),
@@ -136,7 +136,7 @@ func (h *TemplateHandler) CreateTemplate(c *gin.Context) {
 	if err := h.templateService.Create(template); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("Failed to create template: %v", err),
+			"error":   fmt.Sprintf("创建模板失败: %v", err),
 		})
 		return
 	}
@@ -156,7 +156,7 @@ func (h *TemplateHandler) UpdateTemplate(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"error":   "Invalid template ID",
+			"error":   "模板ID无效",
 		})
 		return
 	}
@@ -165,7 +165,7 @@ func (h *TemplateHandler) UpdateTemplate(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("Invalid request: %v", err),
+			"error":   fmt.Sprintf("请求参数无效: %v", err),
 		})
 		return
 	}
@@ -195,7 +195,7 @@ func (h *TemplateHandler) UpdateTemplate(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("Failed to get template: %v", err),
+			"error":   fmt.Sprintf("获取模板失败: %v", err),
 		})
 		return
 	}
@@ -203,7 +203,7 @@ func (h *TemplateHandler) UpdateTemplate(c *gin.Context) {
 	if existingTemplate == nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"success": false,
-			"error":   "Template not found",
+			"error":   "模板不存在",
 		})
 		return
 	}
@@ -211,7 +211,7 @@ func (h *TemplateHandler) UpdateTemplate(c *gin.Context) {
 	if existingTemplate.UserID != userID {
 		c.JSON(http.StatusForbidden, gin.H{
 			"success": false,
-			"error":   "Permission denied",
+			"error":   "无权限访问此模板",
 		})
 		return
 	}
@@ -223,7 +223,7 @@ func (h *TemplateHandler) UpdateTemplate(c *gin.Context) {
 	if err := h.templateService.Update(existingTemplate); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("Failed to update template: %v", err),
+			"error":   fmt.Sprintf("更新模板失败: %v", err),
 		})
 		return
 	}
@@ -243,7 +243,7 @@ func (h *TemplateHandler) DeleteTemplate(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"error":   "Invalid template ID",
+			"error":   "模板ID无效",
 		})
 		return
 	}
@@ -253,7 +253,7 @@ func (h *TemplateHandler) DeleteTemplate(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("Failed to get template: %v", err),
+			"error":   fmt.Sprintf("获取模板失败: %v", err),
 		})
 		return
 	}
@@ -261,7 +261,7 @@ func (h *TemplateHandler) DeleteTemplate(c *gin.Context) {
 	if template == nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"success": false,
-			"error":   "Template not found",
+			"error":   "模板不存在",
 		})
 		return
 	}
@@ -269,7 +269,7 @@ func (h *TemplateHandler) DeleteTemplate(c *gin.Context) {
 	if template.UserID != userID {
 		c.JSON(http.StatusForbidden, gin.H{
 			"success": false,
-			"error":   "Permission denied",
+			"error":   "无权限访问此模板",
 		})
 		return
 	}
@@ -277,7 +277,7 @@ func (h *TemplateHandler) DeleteTemplate(c *gin.Context) {
 	if err := h.templateService.Delete(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("Failed to delete template: %v", err),
+			"error":   fmt.Sprintf("删除模板失败: %v", err),
 		})
 		return
 	}

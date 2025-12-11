@@ -5,11 +5,13 @@ import (
 	"github.com/herbertgao/gaokao_bot/internal/handler"
 	"github.com/herbertgao/gaokao_bot/internal/middleware"
 	"github.com/herbertgao/gaokao_bot/internal/service"
+	"gorm.io/gorm"
 )
 
 // NewRouter 创建路由器
 // 返回路由器和 RateLimiter 实例（用于生命周期管理）
 func NewRouter(
+	db *gorm.DB,
 	botToken string,
 	templateService *service.UserTemplateService,
 	skipValidation bool,
@@ -50,10 +52,30 @@ func NewRouter(
 		}
 	}
 
-	// 健康检查
+	// 健康检查（包含数据库连接检查）
 	router.GET("/health", func(c *gin.Context) {
+		// 检查数据库连接
+		sqlDB, err := db.DB()
+		if err != nil {
+			c.JSON(503, gin.H{
+				"status": "unhealthy",
+				"error":  "无法获取数据库连接",
+			})
+			return
+		}
+
+		// Ping 数据库
+		if err := sqlDB.Ping(); err != nil {
+			c.JSON(503, gin.H{
+				"status": "unhealthy",
+				"error":  "数据库连接失败",
+			})
+			return
+		}
+
 		c.JSON(200, gin.H{
-			"status": "ok",
+			"status":   "ok",
+			"database": "connected",
 		})
 	})
 

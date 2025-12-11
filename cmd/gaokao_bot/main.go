@@ -114,7 +114,7 @@ func main() {
 	skipValidation := cfg.App.Env != "prod"
 	// 仅在 debug 日志级别下启用 GIN 访问日志
 	enableGinLogger := cfg.Log.Level == "debug"
-	router, rateLimiter := api.NewRouter(cfg.Telegram.Bot.Token, userTemplateService, skipValidation, enableGinLogger)
+	router, rateLimiter := api.NewRouter(db, cfg.Telegram.Bot.Token, userTemplateService, skipValidation, enableGinLogger)
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.App.Port),
 		Handler: router,
