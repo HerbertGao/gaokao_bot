@@ -56,7 +56,11 @@ func main() {
 	if err != nil {
 		logger.Fatalf("获取数据库实例失败: %v", err)
 	}
-	defer sqlDB.Close()
+	defer func() {
+		if err := sqlDB.Close(); err != nil {
+			logger.Errorf("关闭数据库连接失败: %v", err)
+		}
+	}()
 
 	// 初始化 Snowflake
 	if err := util.InitSnowflake(cfg.Snowflake.DatacenterID, cfg.Snowflake.MachineID); err != nil {

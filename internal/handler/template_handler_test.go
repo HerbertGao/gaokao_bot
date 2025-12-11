@@ -90,7 +90,9 @@ func TestGetTemplates(t *testing.T) {
 	}
 
 	var response map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &response)
+	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Failed to unmarshal response: %v", err)
+	}
 
 	if success, ok := response["success"].(bool); !ok || !success {
 		t.Error("Expected success to be true")

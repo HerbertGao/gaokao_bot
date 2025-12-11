@@ -10,13 +10,13 @@ func TestLoad(t *testing.T) {
 	oldEnv := os.Getenv("APP_PORT")
 	defer func() {
 		if oldEnv != "" {
-			os.Setenv("APP_PORT", oldEnv)
+			_ = os.Setenv("APP_PORT", oldEnv)
 		} else {
-			os.Unsetenv("APP_PORT")
+			_ = os.Unsetenv("APP_PORT")
 		}
 	}()
 
-	os.Setenv("APP_PORT", "8080")
+	_ = os.Setenv("APP_PORT", "8080")
 
 	cfg, err := Load("dev")
 	if err != nil {
@@ -47,14 +47,14 @@ func TestLoad_EnvOverride(t *testing.T) {
 	oldPort := os.Getenv("APP_PORT")
 	defer func() {
 		if oldPort != "" {
-			os.Setenv("APP_PORT", oldPort)
+			_ = os.Setenv("APP_PORT", oldPort)
 		} else {
-			os.Unsetenv("APP_PORT")
+			_ = os.Unsetenv("APP_PORT")
 		}
 	}()
 
 	testPort := "9999"
-	os.Setenv("APP_PORT", testPort)
+	_ = os.Setenv("APP_PORT", testPort)
 
 	cfg, err := Load("dev")
 	if err != nil {

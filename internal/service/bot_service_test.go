@@ -15,12 +15,11 @@ func TestNewBotService(t *testing.T) {
 	logger.SetLevel(logrus.ErrorLevel)
 
 	// 创建 nil bot（在测试中我们不会真正调用 API）
-	var bot *telego.Bot = nil
 	messageService := &MessageService{}
 	inlineQueryService := &InlineQueryService{}
 	miniAppURL := "https://example.com"
 
-	service := NewBotService(bot, messageService, inlineQueryService, logger, miniAppURL)
+	service := NewBotService(nil, messageService, inlineQueryService, logger, miniAppURL)
 
 	if service == nil {
 		t.Error("NewBotService() returned nil")

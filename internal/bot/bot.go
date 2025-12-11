@@ -55,7 +55,7 @@ func (b *GaokaoBot) Start() error {
 	b.logger.Infof("Bot authorized on account %s", botUser.Username)
 
 	// 启动长轮询
-	updates, err := b.bot.UpdatesViaLongPolling(nil, nil)
+	updates, err := b.bot.UpdatesViaLongPolling(context.TODO(), nil)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,9 @@ func (b *GaokaoBot) Start() error {
 
 	// 开始处理更新
 	go func() {
-		b.handler.Start()
+		if err := b.handler.Start(); err != nil {
+			b.logger.Errorf("Handler start error: %v", err)
+		}
 		close(b.done)
 	}()
 
@@ -131,7 +133,9 @@ func (b *GaokaoBot) Start() error {
 // Stop 停止Bot
 func (b *GaokaoBot) Stop() {
 	b.logger.Info("Stopping bot...")
-	b.handler.Stop()
+	if err := b.handler.Stop(); err != nil {
+		b.logger.Errorf("Handler stop error: %v", err)
+	}
 	<-b.done // 等待 handler 完全停止
 	b.logger.Info("Bot stopped")
 }

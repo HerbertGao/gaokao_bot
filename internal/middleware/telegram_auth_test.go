@@ -44,13 +44,15 @@ func TestGetTestUserID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// 保存原始环境变量
 			originalEnv := os.Getenv("TEST_USER_ID")
-			defer os.Setenv("TEST_USER_ID", originalEnv)
+			defer func() {
+				_ = os.Setenv("TEST_USER_ID", originalEnv)
+			}()
 
 			// 设置测试环境变量
 			if tt.envVar != "" {
-				os.Setenv("TEST_USER_ID", tt.envVar)
+				_ = os.Setenv("TEST_USER_ID", tt.envVar)
 			} else {
-				os.Unsetenv("TEST_USER_ID")
+				_ = os.Unsetenv("TEST_USER_ID")
 			}
 
 			got := getTestUserID()

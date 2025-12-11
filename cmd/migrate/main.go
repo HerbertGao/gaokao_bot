@@ -34,7 +34,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "获取数据库连接错误: %v\n", err)
 		os.Exit(1)
 	}
-	defer sqlDB.Close()
+	defer func() {
+		if err := sqlDB.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "关闭数据库连接失败: %v\n", err)
+		}
+	}()
 
 	// 执行迁移操作
 	switch *action {
