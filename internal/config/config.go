@@ -84,13 +84,14 @@ type DailySendConfig struct {
 // Load 加载配置
 func Load(env string) (*Config, error) {
 	// 尝试加载环境特定的 .env 文件
+	// 忽略错误：.env 文件是可选的，可以通过系统环境变量或 YAML 配置
 	if env != "" {
 		envFile := fmt.Sprintf(".env.%s", env)
-		_ = godotenv.Load(envFile)
+		_ = godotenv.Load(envFile) // 环境特定配置是可选的
 	}
 
-	// 加载默认 .env 文件
-	_ = godotenv.Load()
+	// 加载默认 .env 文件（可选）
+	_ = godotenv.Load() // 默认配置是可选的
 
 	cfg := &Config{
 		App: AppConfig{

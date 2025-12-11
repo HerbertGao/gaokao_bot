@@ -14,10 +14,18 @@ import (
 
 const (
 	// MaxTemplatesPerUser 每个用户最多可创建的模板数量
+	// 限制为 10 个以防止滥用和控制数据库存储
 	MaxTemplatesPerUser = 10
-	// MaxTemplateContentLength 模板内容最大长度
+
+	// MaxTemplateContentLength 模板内容最大长度（字符数）
+	// 限制为 140 字符以确保：
+	// 1. 适合 Telegram 消息显示
+	// 2. 防止过长文本影响用户体验
+	// 3. 控制数据库字段大小
 	MaxTemplateContentLength = 140
-	// MaxTemplateNameLength 模板名称最大长度
+
+	// MaxTemplateNameLength 模板名称最大长度（字符数）
+	// 限制为 20 字符以保持名称简洁易读
 	MaxTemplateNameLength = 20
 )
 

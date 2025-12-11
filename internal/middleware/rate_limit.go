@@ -31,8 +31,12 @@ func NewRateLimiter(rate, burst int) *RateLimiter {
 		visitors: make(map[string]*visitor),
 		rate:     rate,
 		burst:    burst,
-		cleanup:  5 * time.Minute,
-		done:     make(chan struct{}),
+		// 每 5 分钟清理一次过期访客记录
+		// 平衡内存使用和清理频率：
+		// - 太频繁：浪费 CPU
+		// - 太少：占用内存
+		cleanup: 5 * time.Minute,
+		done:    make(chan struct{}),
 	}
 
 	// 启动清理 goroutine
