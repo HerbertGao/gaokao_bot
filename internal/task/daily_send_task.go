@@ -14,6 +14,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	// DefaultContextTimeout 默认上下文超时时间
+	DefaultContextTimeout = 10 * time.Second
+)
+
 // DailySendTask 每日发送任务
 type DailySendTask struct {
 	cron                *cron.Cron
@@ -110,10 +115,13 @@ func (t *DailySendTask) execute() {
 				continue
 			}
 
-			sentMsg, err := t.bot.SendMessage(context.Background(), telegoutil.Message(
+			// 使用带超时的 context 防止 API 调用挂起
+			ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+			sentMsg, err := t.bot.SendMessage(ctx, telegoutil.Message(
 				telegoutil.ID(chatID),
 				message,
 			))
+			cancel()
 
 			if err != nil {
 				t.logger.Errorf("发送消息到聊天 %s 失败: %v", chat.ChatID, err)
