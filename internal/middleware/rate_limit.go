@@ -15,6 +15,7 @@ type RateLimiter struct {
 	rate     int           // 每秒允许的请求数
 	burst    int           // 突发请求数
 	cleanup  time.Duration // 清理过期访客的间隔
+	done     chan struct{} // 关闭信号
 }
 
 type visitor struct {
@@ -30,6 +31,7 @@ func NewRateLimiter(rate, burst int) *RateLimiter {
 		rate:     rate,
 		burst:    burst,
 		cleanup:  5 * time.Minute,
+		done:     make(chan struct{}),
 	}
 
 	// 启动清理 goroutine
@@ -43,15 +45,25 @@ func (rl *RateLimiter) cleanupVisitors() {
 	ticker := time.NewTicker(rl.cleanup)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		rl.mu.Lock()
-		for key, v := range rl.visitors {
-			if time.Since(v.lastSeen) > rl.cleanup {
-				delete(rl.visitors, key)
+	for {
+		select {
+		case <-ticker.C:
+			rl.mu.Lock()
+			for key, v := range rl.visitors {
+				if time.Since(v.lastSeen) > rl.cleanup {
+					delete(rl.visitors, key)
+				}
 			}
+			rl.mu.Unlock()
+		case <-rl.done:
+			return
 		}
-		rl.mu.Unlock()
 	}
+}
+
+// Stop 停止速率限制器
+func (rl *RateLimiter) Stop() {
+	close(rl.done)
 }
 
 // getVisitor 获取或创建访客
@@ -96,11 +108,12 @@ func (rl *RateLimiter) allow(key string) bool {
 	return false
 }
 
-// RateLimitMiddleware 速率限制中间件
-func RateLimitMiddleware(rate, burst int) gin.HandlerFunc {
+// RateLimitMiddleware 创建速率限制中间件
+// 返回中间件处理函数和 RateLimiter 实例（用于生命周期管理）
+func RateLimitMiddleware(rate, burst int) (gin.HandlerFunc, *RateLimiter) {
 	limiter := NewRateLimiter(rate, burst)
 
-	return func(c *gin.Context) {
+	handler := func(c *gin.Context) {
 		// 使用 user_id 作为限制键，如果没有则使用 IP
 		key := c.GetString("user_id")
 		if key == "" {
@@ -118,4 +131,6 @@ func RateLimitMiddleware(rate, burst int) gin.HandlerFunc {
 
 		c.Next()
 	}
+
+	return handler, limiter
 }

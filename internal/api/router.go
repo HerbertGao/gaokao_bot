@@ -8,12 +8,13 @@ import (
 )
 
 // NewRouter 创建路由器
+// 返回路由器和 RateLimiter 实例（用于生命周期管理）
 func NewRouter(
 	botToken string,
 	templateService *service.UserTemplateService,
 	skipValidation bool,
 	enableLogger bool,
-) *gin.Engine {
+) (*gin.Engine, *middleware.RateLimiter) {
 	// 根据是否启用日志来创建路由器
 	var router *gin.Engine
 	if enableLogger {
@@ -31,13 +32,16 @@ func NewRouter(
 	// 创建处理器
 	templateHandler := handler.NewTemplateHandler(templateService)
 
+	// 创建速率限制中间件
+	rateLimitHandler, rateLimiter := middleware.RateLimitMiddleware(10, 20) // 每秒10个请求，突发20个
+
 	// API 路由组
 	api := router.Group("/api")
 	{
 		// 模板相关 API（需要认证和速率限制）
 		templates := api.Group("/templates")
 		templates.Use(middleware.TelegramAuthMiddleware(botToken, skipValidation))
-		templates.Use(middleware.RateLimitMiddleware(10, 20)) // 每秒10个请求，突发20个
+		templates.Use(rateLimitHandler)
 		{
 			templates.GET("", templateHandler.GetTemplates)
 			templates.POST("", templateHandler.CreateTemplate)
@@ -53,5 +57,5 @@ func NewRouter(
 		})
 	})
 
-	return router
+	return router, rateLimiter
 }

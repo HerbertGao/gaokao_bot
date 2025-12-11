@@ -51,6 +51,13 @@ func main() {
 		logger.Fatalf("Failed to connect database: %v", err)
 	}
 
+	// 确保数据库连接在程序退出时关闭
+	sqlDB, err := db.DB()
+	if err != nil {
+		logger.Fatalf("Failed to get database instance: %v", err)
+	}
+	defer sqlDB.Close()
+
 	// 初始化 Snowflake
 	if err := util.InitSnowflake(cfg.Snowflake.DatacenterID, cfg.Snowflake.MachineID); err != nil {
 		logger.Fatalf("Failed to init snowflake: %v", err)
@@ -107,7 +114,7 @@ func main() {
 	skipValidation := cfg.App.Env != "prod"
 	// 仅在 debug 日志级别下启用 GIN 访问日志
 	enableGinLogger := cfg.Log.Level == "debug"
-	router := api.NewRouter(cfg.Telegram.Bot.Token, userTemplateService, skipValidation, enableGinLogger)
+	router, rateLimiter := api.NewRouter(cfg.Telegram.Bot.Token, userTemplateService, skipValidation, enableGinLogger)
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.App.Port),
 		Handler: router,
@@ -140,6 +147,9 @@ func main() {
 	if err := httpServer.Shutdown(ctx); err != nil {
 		logger.Errorf("HTTP server shutdown error: %v", err)
 	}
+
+	// 停止速率限制器
+	rateLimiter.Stop()
 
 	// 停止 Bot
 	gaokaoBot.Stop()
