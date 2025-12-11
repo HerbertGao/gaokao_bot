@@ -77,7 +77,7 @@ func (s *BotService) HandleInlineQuery(bot *telego.Bot, query *telego.InlineQuer
 	})
 
 	if err != nil {
-		s.logger.Errorf("回复内联查询失败: %v", err)
+		s.logger.Errorf("回复内联查询失败: %s", getContextErrorMessage(err))
 	} else if s.logger.Level >= logrus.DebugLevel {
 		// Debug 模式下打印内联查询回复
 		s.logger.Debugf("[Telegram] -> Answered inline query (ID: %s) with %d results",
@@ -132,7 +132,7 @@ func (s *BotService) handleCommand(msg *telego.Message) {
 	))
 
 	if err != nil {
-		s.logger.Errorf("发送消息失败: %v", err)
+		s.logger.Errorf("发送消息失败: %s", getContextErrorMessage(err))
 	} else if s.logger.Level >= logrus.DebugLevel {
 		// Debug 模式下打印发送的消息
 		s.logger.Debugf("[Telegram] -> Sent message to Chat %d (MsgID: %d): %s",
@@ -170,7 +170,7 @@ func (s *BotService) handleDebugCommand(msg *telego.Message) {
 	})
 
 	if err != nil {
-		s.logger.Errorf("发送调试消息失败: %v", err)
+		s.logger.Errorf("发送调试消息失败: %s", getContextErrorMessage(err))
 	} else if s.logger.Level >= logrus.DebugLevel {
 		// Debug 模式下打印发送的消息
 		s.logger.Debugf("[Telegram] -> Sent /debug response to Chat %d (MsgID: %d) with WebApp button",
@@ -204,7 +204,7 @@ func (s *BotService) handleTemplateCommand(msg *telego.Message) {
 	})
 
 	if err != nil {
-		s.logger.Errorf("发送模板消息失败: %v", err)
+		s.logger.Errorf("发送模板消息失败: %s", getContextErrorMessage(err))
 	} else if s.logger.Level >= logrus.DebugLevel {
 		// Debug 模式下打印发送的消息
 		s.logger.Debugf("[Telegram] -> Sent /template response to Chat %d (MsgID: %d) with WebApp button",
@@ -219,4 +219,21 @@ func truncateString(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen] + "..."
+}
+
+// getContextErrorMessage 获取上下文错误的友好消息
+func getContextErrorMessage(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	// 检查是否为上下文错误
+	if err == context.Canceled {
+		return "请求被取消"
+	}
+	if err == context.DeadlineExceeded {
+		return "请求超时"
+	}
+
+	return err.Error()
 }

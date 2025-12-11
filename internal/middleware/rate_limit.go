@@ -55,14 +55,12 @@ func (rl *RateLimiter) cleanupVisitors() {
 		case <-ticker.C:
 			rl.mu.Lock()
 			for key, v := range rl.visitors {
-				// 锁定访客以安全读取 lastSeen（防止与 allow() 中的更新产生竞态）
+				// 锁定访客并检查是否过期，避免在读取和删除之间的竞态
 				v.mu.Lock()
-				lastSeen := v.lastSeen
-				v.mu.Unlock()
-
-				if time.Since(lastSeen) > rl.cleanup {
+				if time.Since(v.lastSeen) > rl.cleanup {
 					delete(rl.visitors, key)
 				}
+				v.mu.Unlock()
 			}
 			rl.mu.Unlock()
 		case <-rl.done:
