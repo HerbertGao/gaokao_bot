@@ -6,26 +6,41 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	// CORSMaxAge CORS 预检请求缓存时间（秒）- 24小时
+	CORSMaxAge = "86400"
+)
+
 // isOriginAllowed 检查 origin 是否被允许
 func isOriginAllowed(origin string, allowedOrigins []string) bool {
+	// 检查是否有 telegram.org 域名在允许列表中
+	hasTelegramOrigin := false
 	for _, allowed := range allowedOrigins {
 		if allowed == origin {
 			return true
 		}
-		// 支持 Telegram Mini App 的动态域名
-		// 注意：这允许任何 *.telegram.org 子域名（例如 myapp.telegram.org）
-		// 这是 Telegram Mini Apps 的预期行为，因为它们可以使用各种子域名。
-		// strings.HasSuffix() 确保域名以 ".telegram.org" 结尾，
-		// 防止类似 "telegram.org.evil.com" 的欺骗攻击。
-		//
-		// 安全权衡：信任所有 telegram.org 子域名是可接受的，因为：
-		// 1. telegram.org 域名由 Telegram 控制
-		// 2. Telegram Mini Apps 需要动态子域名支持
-		// 3. HasSuffix 检查防止域名欺骗
-		if strings.HasSuffix(origin, ".telegram.org") {
-			return true
+		// 检查是否显式允许了 telegram.org 相关域名
+		if strings.Contains(allowed, "telegram.org") {
+			hasTelegramOrigin = true
 		}
 	}
+
+	// 仅当 allowedOrigins 中包含 telegram.org 相关域名时，才启用通配符匹配
+	// 支持 Telegram Mini App 的动态子域名
+	// 注意：这允许任何 *.telegram.org 子域名（例如 myapp.telegram.org）
+	// 这是 Telegram Mini Apps 的预期行为，因为它们可以使用各种子域名。
+	// strings.HasSuffix() 确保域名以 ".telegram.org" 结尾，
+	// 防止类似 "telegram.org.evil.com" 的欺骗攻击。
+	//
+	// 安全权衡：信任所有 telegram.org 子域名是可接受的，因为：
+	// 1. telegram.org 域名由 Telegram 控制
+	// 2. Telegram Mini Apps 需要动态子域名支持
+	// 3. HasSuffix 检查防止域名欺骗
+	// 4. 仅在显式配置 telegram.org 时启用（非全局通配符）
+	if hasTelegramOrigin && strings.HasSuffix(origin, ".telegram.org") {
+		return true
+	}
+
 	return false
 }
 
@@ -47,7 +62,7 @@ func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-Telegram-Init-Data")
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
-			c.Writer.Header().Set("Access-Control-Max-Age", "86400")
+			c.Writer.Header().Set("Access-Control-Max-Age", CORSMaxAge)
 		}
 
 		if c.Request.Method == "OPTIONS" {

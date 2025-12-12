@@ -206,6 +206,13 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("必须配置至少一个 CORS 允许来源 (CORS_ALLOWED_ORIGINS)")
 	}
 
+	// 验证每个 CORS origin 都包含正确的协议
+	for _, origin := range c.CORS.AllowedOrigins {
+		if !strings.HasPrefix(origin, "http://") && !strings.HasPrefix(origin, "https://") {
+			return fmt.Errorf("CORS 来源必须包含协议 (http:// 或 https://)，无效值: %s", origin)
+		}
+	}
+
 	return nil
 }
 

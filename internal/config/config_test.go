@@ -177,6 +177,70 @@ func TestValidate_RequiresCORSOrigins(t *testing.T) {
 	}
 }
 
+func TestValidate_CORSOriginsProtocol(t *testing.T) {
+	tests := []struct {
+		name    string
+		origins []string
+		wantErr bool
+	}{
+		{
+			name:    "Valid origins with http and https",
+			origins: []string{"http://localhost:3000", "https://example.com"},
+			wantErr: false,
+		},
+		{
+			name:    "Invalid origin without protocol",
+			origins: []string{"localhost:3000"},
+			wantErr: true,
+		},
+		{
+			name:    "Invalid origin with only domain",
+			origins: []string{"example.com"},
+			wantErr: true,
+		},
+		{
+			name:    "Mixed valid and invalid origins",
+			origins: []string{"https://example.com", "localhost:3000"},
+			wantErr: true,
+		},
+		{
+			name:    "Valid origins only https",
+			origins: []string{"https://web.telegram.org", "https://example.com"},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{
+				App: AppConfig{
+					Env:  "dev",
+					Port: 8080,
+				},
+				Telegram: TelegramConfig{
+					Bot: BotConfig{
+						Token: "test_token",
+					},
+				},
+				Database: DatabaseConfig{
+					Host:     "localhost",
+					Port:     3306,
+					Name:     "testdb",
+					Username: "testuser",
+				},
+				CORS: CORSConfig{
+					AllowedOrigins: tt.origins,
+				},
+			}
+
+			err := cfg.Validate()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestValidate_DatabaseConfigRequired(t *testing.T) {
 	tests := []struct {
 		name   string

@@ -17,7 +17,7 @@ var testAllowedOrigins = []string{
 	"http://127.0.0.1:3000",
 }
 
-func TestIsOriginAllowed(t *testing.T) {
+func TestIsOriginAllowed_WithTelegramInList(t *testing.T) {
 	tests := []struct {
 		name   string
 		origin string
@@ -69,6 +69,16 @@ func TestIsOriginAllowed(t *testing.T) {
 			want:   false,
 		},
 		{
+			name:   "Domain spoofing - telegram.org.evil.com",
+			origin: "https://telegram.org.evil.com",
+			want:   false,
+		},
+		{
+			name:   "Domain spoofing - subdomain.telegram.org.evil.com",
+			origin: "https://app.telegram.org.evil.com",
+			want:   false,
+		},
+		{
 			name:   "Empty origin",
 			origin: "",
 			want:   false,
@@ -80,6 +90,57 @@ func TestIsOriginAllowed(t *testing.T) {
 			got := isOriginAllowed(tt.origin, testAllowedOrigins)
 			if got != tt.want {
 				t.Errorf("isOriginAllowed(%q) = %v, want %v", tt.origin, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsOriginAllowed_WithoutTelegramInList(t *testing.T) {
+	// 测试当 allowedOrigins 不包含 telegram.org 时，
+	// telegram.org 子域名不应被允许（安全修复验证）
+	noTelegramOrigins := []string{
+		"http://localhost:5173",
+		"http://localhost:3000",
+		"https://my-custom-domain.com",
+	}
+
+	tests := []struct {
+		name   string
+		origin string
+		want   bool
+	}{
+		{
+			name:   "Telegram subdomain should be rejected when telegram.org not in allowed list",
+			origin: "https://myapp.telegram.org",
+			want:   false,
+		},
+		{
+			name:   "web.telegram.org should be rejected when not in allowed list",
+			origin: "https://web.telegram.org",
+			want:   false,
+		},
+		{
+			name:   "Allowed origin - localhost should work",
+			origin: "http://localhost:5173",
+			want:   true,
+		},
+		{
+			name:   "Allowed origin - custom domain should work",
+			origin: "https://my-custom-domain.com",
+			want:   true,
+		},
+		{
+			name:   "Disallowed origin",
+			origin: "https://evil.com",
+			want:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isOriginAllowed(tt.origin, noTelegramOrigins)
+			if got != tt.want {
+				t.Errorf("isOriginAllowed(%q, %v) = %v, want %v", tt.origin, noTelegramOrigins, got, tt.want)
 			}
 		})
 	}
