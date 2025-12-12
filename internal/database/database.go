@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"time"
 
@@ -44,6 +45,49 @@ func NewDatabase(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 	sqlDB.SetConnMaxLifetime(time.Duration(cfg.ConnMaxLifetime) * time.Second)
 
 	return db, nil
+}
+
+// NewDatabaseWithRetry 创建数据库连接（带重试逻辑）
+// 适用于容器化环境中数据库可能暂时不可用的情况
+func NewDatabaseWithRetry(cfg *config.DatabaseConfig, maxRetries int) (*gorm.DB, error) {
+	var db *gorm.DB
+	var err error
+
+	// 指数退避配置
+	initialDelay := 1 * time.Second
+	maxDelay := 30 * time.Second
+	currentDelay := initialDelay
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		db, err = NewDatabase(cfg)
+		if err == nil {
+			// 连接成功，验证数据库是否可用
+			sqlDB, pingErr := db.DB()
+			if pingErr == nil {
+				if pingErr = sqlDB.Ping(); pingErr == nil {
+					log.Printf("数据库连接成功（第 %d 次尝试）", attempt)
+					return db, nil
+				}
+				err = pingErr
+			} else {
+				err = pingErr
+			}
+		}
+
+		if attempt < maxRetries {
+			log.Printf("数据库连接失败（第 %d/%d 次尝试）: %v，%v 后重试...",
+				attempt, maxRetries, err, currentDelay)
+			time.Sleep(currentDelay)
+
+			// 指数退避：每次失败后延迟时间翻倍
+			currentDelay *= 2
+			if currentDelay > maxDelay {
+				currentDelay = maxDelay
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("数据库连接失败（已重试 %d 次）: %w", maxRetries, err)
 }
 
 // AutoMigrateSchema 自动迁移数据库表结构

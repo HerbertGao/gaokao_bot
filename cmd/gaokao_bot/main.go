@@ -46,8 +46,14 @@ func main() {
 	// 初始化日志
 	logger := initLogger(cfg.Log)
 
-	// 初始化数据库
-	db, err := database.NewDatabase(&cfg.Database)
+	// 初始化数据库（带重试逻辑，适用于容器化环境）
+	// 生产环境：重试 10 次（最长等待约 60 秒）
+	// 非生产环境：重试 5 次（快速失败）
+	maxRetries := 5
+	if cfg.App.Env == "prod" {
+		maxRetries = 10
+	}
+	db, err := database.NewDatabaseWithRetry(&cfg.Database, maxRetries)
 	if err != nil {
 		logger.Fatalf("连接数据库失败: %v", err)
 	}
@@ -133,14 +139,15 @@ func main() {
 	}
 
 	// 创建错误通道用于 goroutine 错误传递
-	serverErr := make(chan error, 1)
+	serverErr := make(chan struct{})
 
 	// 在 goroutine 中启动 HTTP 服务器
 	go func() {
 		logger.Infof("正在启动 HTTP 服务器，端口: %d...", cfg.App.Port)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Errorf("HTTP 服务器错误: %v", err)
-			serverErr <- err
+			// 使用 close 而不是发送，避免通道阻塞
+			close(serverErr)
 		}
 	}()
 
@@ -160,8 +167,8 @@ func main() {
 	select {
 	case <-quit:
 		logger.Info("收到退出信号")
-	case err := <-serverErr:
-		logger.Errorf("HTTP 服务器异常退出: %v", err)
+	case <-serverErr:
+		logger.Error("HTTP 服务器异常退出")
 	}
 
 	logger.Info("正在关闭...")

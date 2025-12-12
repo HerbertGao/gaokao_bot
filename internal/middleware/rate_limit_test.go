@@ -225,11 +225,12 @@ func TestRateLimitMiddleware_ErrorResponse(t *testing.T) {
 func TestRateLimiter_CleanupVisitors(t *testing.T) {
 	// 创建一个清理间隔很短的 limiter
 	limiter := &RateLimiter{
-		visitors: make(map[string]*visitor),
-		rate:     10,
-		burst:    20,
-		cleanup:  50 * time.Millisecond, // 短的清理间隔
-		done:     make(chan struct{}),
+		visitors:    make(map[string]*visitor),
+		rate:        10,
+		burst:       20,
+		cleanup:     50 * time.Millisecond, // 短的清理间隔
+		maxVisitors: 10000,                 // 设置最大访客数量
+		done:        make(chan struct{}),
 	}
 
 	// 启动清理 goroutine
