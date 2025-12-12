@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/herbertgao/gaokao_bot/internal/config"
+	"github.com/herbertgao/gaokao_bot/internal/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -43,4 +44,14 @@ func NewDatabase(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 	sqlDB.SetConnMaxLifetime(time.Duration(cfg.ConnMaxLifetime) * time.Second)
 
 	return db, nil
+}
+
+// AutoMigrateSchema 自动迁移数据库表结构
+// GORM 的 AutoMigrate 是幂等的，可以安全地多次执行
+func AutoMigrateSchema(db *gorm.DB) error {
+	return db.AutoMigrate(
+		&model.ExamDate{},
+		&model.SendChat{},
+		&model.UserTemplate{},
+	)
 }

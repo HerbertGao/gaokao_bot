@@ -62,12 +62,12 @@ func main() {
 		}
 	}()
 
-	// 自动执行数据库迁移
-	logger.Info("正在执行数据库迁移...")
-	if err := database.RunMigrations(db); err != nil {
-		logger.Fatalf("数据库迁移失败: %v", err)
+	// 自动迁移数据库表结构
+	logger.Info("正在同步数据库表结构...")
+	if err := database.AutoMigrateSchema(db); err != nil {
+		logger.Fatalf("数据库表结构同步失败: %v", err)
 	}
-	logger.Info("数据库迁移完成")
+	logger.Info("数据库表结构同步完成")
 
 	// 初始化 Snowflake
 	if err := util.InitSnowflake(cfg.Snowflake.DatacenterID, cfg.Snowflake.MachineID); err != nil {
