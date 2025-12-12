@@ -57,6 +57,9 @@ func main() {
 	// 初始化日志
 	logger := initLogger(cfg.Log)
 
+	// 记录 CORS 配置（用于调试）
+	logger.Infof("CORS 允许来源 (%d): %v", len(cfg.CORS.AllowedOrigins), cfg.CORS.AllowedOrigins)
+
 	// 初始化数据库（带重试逻辑，适用于容器化环境）
 	// 生产环境：重试 10 次（最长等待约 60 秒）
 	// 非生产环境：重试 5 次（快速失败）

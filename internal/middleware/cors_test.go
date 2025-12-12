@@ -8,6 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// testAllowedOrigins 测试用的允许源列表
+var testAllowedOrigins = []string{
+	"https://web.telegram.org",
+	"http://localhost:5173",
+	"http://localhost:3000",
+	"http://127.0.0.1:5173",
+	"http://127.0.0.1:3000",
+}
+
 func TestIsOriginAllowed(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -68,7 +77,7 @@ func TestIsOriginAllowed(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := isOriginAllowed(tt.origin)
+			got := isOriginAllowed(tt.origin, testAllowedOrigins)
 			if got != tt.want {
 				t.Errorf("isOriginAllowed(%q) = %v, want %v", tt.origin, got, tt.want)
 			}
@@ -141,7 +150,7 @@ func TestCORSMiddleware(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// 创建测试路由
 			router := gin.New()
-			router.Use(CORSMiddleware())
+			router.Use(CORSMiddleware(testAllowedOrigins))
 			router.GET("/test", func(c *gin.Context) {
 				c.String(http.StatusOK, "OK")
 			})

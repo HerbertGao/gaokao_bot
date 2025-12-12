@@ -149,6 +149,8 @@ func Load(env string) (*Config, error) {
 				"https://web.telegram.org",
 				"http://localhost:5173",
 				"http://localhost:3000",
+				"http://127.0.0.1:5173",
+				"http://127.0.0.1:3000",
 			}),
 		},
 	}
@@ -197,6 +199,11 @@ func (c *Config) Validate() error {
 		if _, err := parser.Parse(c.Task.DailySend.Cron); err != nil {
 			return fmt.Errorf("无效的 Cron 表达式 '%s': %w", c.Task.DailySend.Cron, err)
 		}
+	}
+
+	// 验证 CORS 配置
+	if len(c.CORS.AllowedOrigins) == 0 {
+		return fmt.Errorf("必须配置至少一个 CORS 允许来源 (CORS_ALLOWED_ORIGINS)")
 	}
 
 	return nil
