@@ -75,6 +75,7 @@ func (s *BotService) HandleInlineQuery(bot *telego.Bot, query *telego.InlineQuer
 	err := s.bot.AnswerInlineQuery(ctx, &telego.AnswerInlineQueryParams{
 		InlineQueryID: query.ID,
 		Results:       results,
+		CacheTime:     1, // Cache for 1 second to prevent stale countdown timers (consistent with Java v8)
 	})
 
 	if err != nil {
