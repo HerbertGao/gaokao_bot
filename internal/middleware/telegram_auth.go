@@ -19,6 +19,9 @@ import (
 const (
 	// InitDataMaxAge Telegram initData 最大有效期（秒）
 	InitDataMaxAge = 86400 // 24小时
+	// ClockSkewTolerance 时钟偏移容忍度（秒）
+	// 允许客户端和服务器时钟之间有轻微偏移
+	ClockSkewTolerance = 300 // 5分钟
 	// DefaultTestUserID 默认测试用户 ID（用于开发环境）
 	DefaultTestUserID = 123456789
 )
@@ -114,15 +117,30 @@ func ValidateTelegramInitData(initData, botToken string) (int64, error) {
 		return 0, fmt.Errorf("缺少认证时间")
 	}
 
-	// 验证时间戳（不超过 24 小时）
+	// 验证时间戳
 	var authDate int64
 	if _, err := fmt.Sscanf(authDateStr, "%d", &authDate); err != nil {
 		return 0, fmt.Errorf("认证时间格式无效: %w", err)
 	}
 
 	now := time.Now().Unix()
+
+	// 检查时间戳是否在未来（超过允许的时钟偏移）
+	// 防止攻击者使用未来的时间戳绕过过期检查
+	if authDate > now+ClockSkewTolerance {
+		return 0, fmt.Errorf("认证时间无效：时间戳在未来")
+	}
+
+	// 检查时间戳是否过期（超过 24 小时）
+	// 使用绝对值或正数检查避免负数绕过
 	if now-authDate > InitDataMaxAge {
 		return 0, fmt.Errorf("初始化数据已过期")
+	}
+
+	// 额外的防御检查：如果时间差是负数（理论上不应该发生，因为已经检查了未来时间）
+	// 但作为双重保护
+	if authDate > now && (authDate-now) > ClockSkewTolerance {
+		return 0, fmt.Errorf("认证时间无效：时间戳异常")
 	}
 
 	// 提取用户 ID

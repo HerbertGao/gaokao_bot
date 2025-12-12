@@ -65,7 +65,11 @@ func TestGetTestUserID(t *testing.T) {
 
 // generateValidInitData 生成有效的 Telegram initData 用于测试
 func generateValidInitData(botToken string, userID int64) string {
-	authDate := time.Now().Unix()
+	return generateValidInitDataWithTimestamp(botToken, userID, time.Now().Unix())
+}
+
+// generateValidInitDataWithTimestamp 生成带有自定义时间戳的有效 Telegram initData
+func generateValidInitDataWithTimestamp(botToken string, userID int64, authDate int64) string {
 	userData := fmt.Sprintf(`{"id":%d,"first_name":"Test","username":"testuser"}`, userID)
 
 	// 构建数据
@@ -140,6 +144,29 @@ func TestValidateTelegramInitData(t *testing.T) {
 				return values.Encode()
 			},
 			wantErr: true,
+		},
+		{
+			name: "Future timestamp (beyond clock skew)",
+			initData: func() string {
+				futureDate := time.Now().Unix() + ClockSkewTolerance + 3600 // 未来1小时（超过偏移容忍度）
+				userData := fmt.Sprintf(`{"id":%d}`, userID)
+				values := url.Values{}
+				values.Set("user", userData)
+				values.Set("auth_date", fmt.Sprintf("%d", futureDate))
+				values.Set("hash", "dummy")
+				return values.Encode()
+			},
+			wantErr: true,
+		},
+		{
+			name: "Future timestamp within clock skew tolerance",
+			initData: func() string {
+				// 未来2分钟，在容忍度内（5分钟）
+				futureDate := time.Now().Unix() + 120
+				return generateValidInitDataWithTimestamp(botToken, userID, futureDate)
+			},
+			wantErr: false,
+			wantUserID: userID,
 		},
 		{
 			name: "Missing user data",
