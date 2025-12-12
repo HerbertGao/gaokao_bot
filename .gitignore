@@ -5,6 +5,11 @@
 *.so
 *.dylib
 
+# Binary executables
+gaokao_bot
+gaokao_bot.tmp
+gaokao_bot.bak
+
 # Test binary, built with `go test -c`
 *.test
 

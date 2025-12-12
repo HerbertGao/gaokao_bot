@@ -18,6 +18,7 @@ import (
 	"github.com/herbertgao/gaokao_bot/internal/repository"
 	"github.com/herbertgao/gaokao_bot/internal/service"
 	"github.com/herbertgao/gaokao_bot/internal/task"
+	"github.com/herbertgao/gaokao_bot/internal/updater"
 	"github.com/herbertgao/gaokao_bot/internal/util"
 	"github.com/herbertgao/gaokao_bot/internal/version"
 	"github.com/mymmrac/telego"
@@ -149,6 +150,9 @@ func main() {
 		logger.Fatalf("Bot 错误: %v", err)
 	}
 
+	// 在后台检查更新（不阻塞启动）
+	go checkForUpdates(logger)
+
 	// 等待退出信号或服务器错误
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -208,4 +212,25 @@ func initLogger(cfg config.LogConfig) *logrus.Logger {
 	}
 
 	return logger
+}
+
+func checkForUpdates(logger *logrus.Logger) {
+	// 等待几秒让应用完全启动
+	time.Sleep(3 * time.Second)
+
+	u := updater.NewUpdater()
+
+	latestVersion, hasUpdate, err := u.CheckUpdate()
+	if err != nil {
+		logger.Debugf("检查更新失败: %v", err)
+		return
+	}
+
+	if hasUpdate {
+		currentVersion := u.GetCurrentVersion()
+		logger.Infof("发现新版本: %s (当前版本: %s)", latestVersion, currentVersion)
+		logger.Infof("请访问 https://github.com/%s/%s/releases 下载最新版本", "HerbertGao", "gaokao_bot")
+	} else {
+		logger.Debug("当前已是最新版本")
+	}
 }
