@@ -15,6 +15,10 @@ import (
 const (
 	// DefaultContextTimeout 默认上下文超时时间
 	DefaultContextTimeout = 10 * time.Second
+
+	// InlineQueryCacheTime inline query 结果缓存时间（秒）
+	// 设置为 1 秒以确保倒计时始终显示最新时间
+	InlineQueryCacheTime = 1
 )
 
 // BotService Bot业务服务
@@ -75,6 +79,7 @@ func (s *BotService) HandleInlineQuery(bot *telego.Bot, query *telego.InlineQuer
 	err := s.bot.AnswerInlineQuery(ctx, &telego.AnswerInlineQueryParams{
 		InlineQueryID: query.ID,
 		Results:       results,
+		CacheTime:     InlineQueryCacheTime,
 	})
 
 	if err != nil {
