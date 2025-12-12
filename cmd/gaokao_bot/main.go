@@ -29,11 +29,22 @@ func main() {
 	// 解析命令行参数
 	env := flag.String("env", "dev", "Environment: dev, prod")
 	showVersion := flag.Bool("version", false, "Show version information")
+	doUpdate := flag.Bool("update", false, "Check for updates and update if available")
 	flag.Parse()
 
 	// 显示版本信息
 	if *showVersion {
 		fmt.Println(version.GetFullVersionInfo())
+		return
+	}
+
+	// 执行更新
+	if *doUpdate {
+		u := updater.NewUpdater()
+		if err := u.Update(); err != nil {
+			fmt.Fprintf(os.Stderr, "更新失败: %v\n", err)
+			os.Exit(1)
+		}
 		return
 	}
 
@@ -136,6 +147,10 @@ func main() {
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.App.Port),
 		Handler: router,
+		// 配置超时以防止资源耗尽
+		ReadTimeout:  15 * time.Second, // 读取请求的超时时间
+		WriteTimeout: 15 * time.Second, // 写入响应的超时时间
+		IdleTimeout:  60 * time.Second, // Keep-Alive 连接的空闲超时
 	}
 
 	// 创建错误通道用于 goroutine 错误传递

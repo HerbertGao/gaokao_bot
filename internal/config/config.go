@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
+	"github.com/robfig/cron/v3"
 )
 
 // Config 应用配置
@@ -170,6 +171,18 @@ func (c *Config) Validate() error {
 	}
 	if c.Database.Port < 1 || c.Database.Port > 65535 {
 		return fmt.Errorf("数据库端口必须在 1-65535 范围内，当前值: %d", c.Database.Port)
+	}
+
+	// 验证 Cron 表达式（如果定时任务已启用）
+	if c.Task.DailySend.Enabled {
+		if c.Task.DailySend.Cron == "" {
+			return fmt.Errorf("定时任务已启用，但未配置 Cron 表达式 (TASK_DAILY_SEND_CRON)")
+		}
+		// 验证 Cron 表达式格式（支持标准5字段和6字段格式）
+		parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+		if _, err := parser.Parse(c.Task.DailySend.Cron); err != nil {
+			return fmt.Errorf("无效的 Cron 表达式 '%s': %w", c.Task.DailySend.Cron, err)
+		}
 	}
 
 	return nil

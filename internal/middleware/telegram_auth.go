@@ -78,9 +78,10 @@ func TelegramAuthMiddleware(botToken string, skipValidation bool) gin.HandlerFun
 		// 验证 initData
 		userID, err := ValidateTelegramInitData(initData, botToken)
 		if err != nil {
+			// 不暴露具体的验证失败原因，防止信息泄露
 			c.JSON(401, gin.H{
 				"success": false,
-				"error":   fmt.Sprintf("Telegram 初始化数据验证失败: %v", err),
+				"error":   "身份验证失败",
 			})
 			c.Abort()
 			return

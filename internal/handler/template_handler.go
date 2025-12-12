@@ -60,9 +60,10 @@ func (h *TemplateHandler) GetTemplates(c *gin.Context) {
 
 	templates, err := h.templateService.GetByUserID(userID)
 	if err != nil {
+		// 不暴露内部错误详情
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("获取模板列表失败: %v", err),
+			"error":   "获取模板列表失败，请稍后重试",
 		})
 		return
 	}
@@ -89,9 +90,10 @@ func (h *TemplateHandler) CreateTemplate(c *gin.Context) {
 	// 检查用户模板数量限制（使用 COUNT 查询优化性能）
 	templateCount, err := h.templateService.CountByUserID(userID)
 	if err != nil {
+		// 不暴露内部错误详情
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("检查模板数量失败: %v", err),
+			"error":   "检查模板数量失败，请稍后重试",
 		})
 		return
 	}
@@ -127,9 +129,10 @@ func (h *TemplateHandler) CreateTemplate(c *gin.Context) {
 	// 生成 ID
 	id, err := util.GenerateID()
 	if err != nil {
+		// 不暴露内部错误详情
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("生成 ID 失败: %v", err),
+			"error":   "创建模板失败，请稍后重试",
 		})
 		return
 	}
@@ -142,9 +145,10 @@ func (h *TemplateHandler) CreateTemplate(c *gin.Context) {
 	}
 
 	if err := h.templateService.Create(template); err != nil {
+		// 不暴露内部错误详情
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("创建模板失败: %v", err),
+			"error":   "创建模板失败，请稍后重试",
 		})
 		return
 	}
@@ -201,9 +205,10 @@ func (h *TemplateHandler) UpdateTemplate(c *gin.Context) {
 	// 检查模板是否存在且属于当前用户
 	existingTemplate, err := h.templateService.GetByID(id)
 	if err != nil {
+		// 不暴露内部错误详情
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("获取模板失败: %v", err),
+			"error":   "获取模板失败，请稍后重试",
 		})
 		return
 	}
@@ -229,9 +234,10 @@ func (h *TemplateHandler) UpdateTemplate(c *gin.Context) {
 	existingTemplate.TemplateContent = req.TemplateContent
 
 	if err := h.templateService.Update(existingTemplate); err != nil {
+		// 不暴露内部错误详情
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("更新模板失败: %v", err),
+			"error":   "更新模板失败，请稍后重试",
 		})
 		return
 	}
@@ -259,9 +265,10 @@ func (h *TemplateHandler) DeleteTemplate(c *gin.Context) {
 	// 检查模板是否存在且属于当前用户
 	template, err := h.templateService.GetByID(id)
 	if err != nil {
+		// 不暴露内部错误详情
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("获取模板失败: %v", err),
+			"error":   "获取模板失败，请稍后重试",
 		})
 		return
 	}
@@ -283,9 +290,10 @@ func (h *TemplateHandler) DeleteTemplate(c *gin.Context) {
 	}
 
 	if err := h.templateService.Delete(id); err != nil {
+		// 不暴露内部错误详情
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"error":   fmt.Sprintf("删除模板失败: %v", err),
+			"error":   "删除模板失败，请稍后重试",
 		})
 		return
 	}
