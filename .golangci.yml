@@ -1,0 +1,131 @@
+# golangci-lint v2 配置文件
+# 文档: https://golangci-lint.run/docs/configuration/file/
+
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  go: '1.25'
+
+linters:
+  # 默认启用标准 linters
+  default: standard
+
+  # 额外启用的 linters
+  # 注意: gosimple 在 v2 中已合并到 staticcheck，gofmt/goimports 是 formatters 而非 linters
+  enable:
+    - errcheck      # 检查未检查的错误
+    - govet         # 报告可疑的构造
+    - ineffassign   # 检测无效的赋值
+    - staticcheck   # 静态分析（包含 gosimple 功能）
+    - unused        # 检查未使用的常量、变量、函数和类型
+    - misspell      # 拼写检查
+    - revive        # Go linter
+    - gosec         # 安全检查
+    - unconvert     # 检查不必要的类型转换
+    - unparam       # 检查未使用的函数参数
+    - goconst       # 检查重复的字符串常量
+    - gocyclo       # 计算代码复杂度
+
+  # Linter 特定设置
+  settings:
+    errcheck:
+      exclude-functions:
+        - (io.Closer).Close
+        - (*database/sql.Rows).Close
+
+    govet:
+      enable-all: true
+      disable:
+        - shadow          # 变量遮蔽检查（可能过于严格）
+        - fieldalignment  # 字段对齐优化（对性能影响微小，影响代码可读性）
+        - unusedwrite     # 测试代码中的未使用字段写入（不影响功能）
+
+    gocyclo:
+      min-complexity: 15
+
+    goconst:
+      min-len: 3
+      min-occurrences: 6  # 只报告出现 6 次以上的重复字符串
+
+    misspell:
+      locale: US
+
+    revive:
+      enable-all-rules: false
+      rules:
+        - name: exported
+          disabled: false
+        - name: package-comments
+          disabled: true  # 不强制要求包注释
+        - name: var-naming
+          disabled: true  # 禁用包名检查（api、util 等是常见且有意义的包名）
+        - name: context-as-argument
+          disabled: false
+        - name: error-return
+          disabled: false
+        - name: error-strings
+          disabled: false
+        - name: error-naming
+          disabled: false
+        - name: if-return
+          disabled: false
+        - name: range
+          disabled: false
+        - name: receiver-naming
+          disabled: false
+        - name: indent-error-flow
+          disabled: false
+
+    gosec:
+      excludes:
+        - G404  # 使用弱随机数生成器（在非安全关键场景可接受）
+      severity: medium
+      confidence: medium
+
+  # 排除规则
+  exclusions:
+    generated: strict
+    warn-unused: true
+
+    # 排除规则
+    rules:
+      # 排除测试文件的某些检查
+      - path: _test\.go
+        linters:
+          - gocyclo
+          - errcheck
+          - gosec
+          - unparam
+
+      # 排除 cmd 目录的某些检查（main 函数通常较复杂）
+      - path: cmd/
+        linters:
+          - unparam
+          - gocyclo
+
+      # 排除生成的文件
+      - path: (^|/)vendor/
+        linters:
+          - errcheck
+          - gosimple
+          - govet
+          - ineffassign
+          - staticcheck
+          - unused
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+
+output:
+  formats:
+    text:
+      path: stdout
+      print-linter-name: true
+  sort-order:
+    - linter
+    - severity
+    - file
