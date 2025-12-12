@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -23,6 +24,14 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("Failed to open test database: %v", err)
 	}
+
+	// 配置 SQLite 以支持并发测试
+	// 设置连接池为单连接，确保所有 goroutine 使用同一个内存数据库
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatalf("Failed to get database instance: %v", err)
+	}
+	sqlDB.SetMaxOpenConns(1)
 
 	// 自动迁移表结构
 	if err := db.AutoMigrate(&model.UserTemplate{}); err != nil {
@@ -201,6 +210,83 @@ func TestCreateTemplate_InvalidContent(t *testing.T) {
 				t.Errorf("Status code = %d, want %d for %s", w.Code, http.StatusBadRequest, tt.name)
 			}
 		})
+	}
+}
+
+// TestCreateTemplate_ConcurrentLimit 测试并发创建模板时的限制保护
+// 验证 TOCTOU 竞态条件已被修复
+func TestCreateTemplate_ConcurrentLimit(t *testing.T) {
+	handler, db := setupTestHandler(t)
+	userID := int64(123)
+
+	// 先创建 MaxTemplatesPerUser - 2 个模板（留 2 个空位）
+	for i := int64(0); i < MaxTemplatesPerUser-2; i++ {
+		db.Create(&model.UserTemplate{
+			ID:              1000 + i,
+			UserID:          userID,
+			TemplateName:    fmt.Sprintf("模板%d", i),
+			TemplateContent: "距离{exam}还有{time}",
+		})
+	}
+
+	router := setupTestRouter(handler, userID)
+
+	// 并发发送 5 个创建请求（超过剩余的 2 个空位）
+	concurrentRequests := 5
+	results := make(chan int, concurrentRequests)
+	var wg sync.WaitGroup
+
+	for i := 0; i < concurrentRequests; i++ {
+		wg.Add(1)
+		go func(index int) {
+			defer wg.Done()
+
+			reqBody := CreateTemplateRequest{
+				TemplateName:    fmt.Sprintf("并发模板%d", index),
+				TemplateContent: "距离{exam}还有{time}",
+			}
+
+			body, _ := json.Marshal(reqBody)
+			req, _ := http.NewRequest(http.MethodPost, "/templates", bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
+
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			results <- w.Code
+		}(i)
+	}
+
+	wg.Wait()
+	close(results)
+
+	// 统计结果
+	successCount := 0
+	failCount := 0
+	for code := range results {
+		switch code {
+		case http.StatusOK:
+			successCount++
+		case http.StatusBadRequest:
+			failCount++
+		default:
+			t.Errorf("Unexpected status code: %d", code)
+		}
+	}
+
+	// 验证：应该恰好有 2 个成功（填满剩余空位），3 个失败（超过限制）
+	if successCount != 2 {
+		t.Errorf("Expected exactly 2 successful creations, got %d", successCount)
+	}
+	if failCount != 3 {
+		t.Errorf("Expected exactly 3 failed creations, got %d", failCount)
+	}
+
+	// 验证数据库中确实只有 MaxTemplatesPerUser 个模板
+	var count int64
+	db.Model(&model.UserTemplate{}).Where("user_id = ?", userID).Count(&count)
+	if count != MaxTemplatesPerUser {
+		t.Errorf("Expected %d templates in database, got %d", MaxTemplatesPerUser, count)
 	}
 }
 

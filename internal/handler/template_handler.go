@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/herbertgao/gaokao_bot/internal/model"
+	"github.com/herbertgao/gaokao_bot/internal/repository"
 	"github.com/herbertgao/gaokao_bot/internal/service"
 	"github.com/herbertgao/gaokao_bot/internal/util"
 )
@@ -87,25 +89,6 @@ func (h *TemplateHandler) CreateTemplate(c *gin.Context) {
 		return
 	}
 
-	// 检查用户模板数量限制（使用 COUNT 查询优化性能）
-	templateCount, err := h.templateService.CountByUserID(userID)
-	if err != nil {
-		// 不暴露内部错误详情
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"error":   "检查模板数量失败，请稍后重试",
-		})
-		return
-	}
-
-	if templateCount >= MaxTemplatesPerUser {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   fmt.Sprintf("模板数量已达上限（最多 %d 个）", MaxTemplatesPerUser),
-		})
-		return
-	}
-
 	// 验证模板内容
 	if err := validateTemplateContent(req.TemplateContent); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -144,8 +127,17 @@ func (h *TemplateHandler) CreateTemplate(c *gin.Context) {
 		TemplateContent: req.TemplateContent,
 	}
 
-	if err := h.templateService.Create(template); err != nil {
-		// 不暴露内部错误详情
+	// 使用原子操作创建模板，防止并发超过限制（TOCTOU 防护）
+	if err := h.templateService.CreateWithLimit(template, MaxTemplatesPerUser); err != nil {
+		// 检查是否是超过限制错误
+		if errors.Is(err, repository.ErrTemplateLimitExceeded) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"error":   fmt.Sprintf("模板数量已达上限（最多 %d 个）", MaxTemplatesPerUser),
+			})
+			return
+		}
+		// 其他错误不暴露内部详情
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
 			"error":   "创建模板失败，请稍后重试",

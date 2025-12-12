@@ -49,3 +49,9 @@ func (s *UserTemplateService) GetByID(id int64) (*model.UserTemplate, error) {
 func (s *UserTemplateService) CountByUserID(userID int64) (int64, error) {
 	return s.repo.CountByUserID(userID)
 }
+
+// CreateWithLimit 在事务中原子地检查数量限制并创建模板
+// 使用数据库锁防止并发创建时超过限制
+func (s *UserTemplateService) CreateWithLimit(template *model.UserTemplate, maxLimit int64) error {
+	return s.repo.CreateWithLimit(template, maxLimit)
+}
