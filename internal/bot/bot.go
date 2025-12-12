@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/herbertgao/gaokao_bot/internal/config"
@@ -25,6 +26,8 @@ type GaokaoBot struct {
 	handler *telegohandler.BotHandler
 	updates <-chan telego.Update
 	done    chan struct{}
+	started bool      // 标记 bot 是否成功启动
+	mu      sync.Mutex // 保护并发访问
 }
 
 // NewGaokaoBot 创建高考Bot
@@ -117,6 +120,11 @@ func (b *GaokaoBot) Start() error {
 		return nil
 	}, telegohandler.AnyInlineQuery())
 
+	// 标记为已启动
+	b.mu.Lock()
+	b.started = true
+	b.mu.Unlock()
+
 	// 开始处理更新
 	go func() {
 		if err := b.handler.Start(); err != nil {
@@ -133,14 +141,37 @@ func (b *GaokaoBot) Start() error {
 // Stop 停止Bot
 func (b *GaokaoBot) Stop() {
 	b.logger.Info("Stopping bot...")
-	if err := b.handler.Stop(); err != nil {
-		b.logger.Errorf("Handler stop error: %v", err)
+
+	b.mu.Lock()
+	started := b.started
+	handler := b.handler
+	b.mu.Unlock()
+
+	// 只有在成功启动后才尝试停止
+	if started && handler != nil {
+		if err := handler.Stop(); err != nil {
+			b.logger.Errorf("Handler stop error: %v", err)
+		}
+		// 等待 handler 完全停止，使用 select 防止永久阻塞
+		select {
+		case <-b.done:
+			b.logger.Info("Bot stopped")
+		case <-time.After(5 * time.Second):
+			b.logger.Warn("Timeout waiting for bot to stop")
+		}
+	} else {
+		b.logger.Info("Bot was not started or already stopped")
 	}
-	<-b.done // 等待 handler 完全停止
-	b.logger.Info("Bot stopped")
 }
 
 // Wait 等待Bot停止
 func (b *GaokaoBot) Wait() {
-	<-b.done
+	b.mu.Lock()
+	started := b.started
+	b.mu.Unlock()
+
+	// 只有在成功启动后才等待
+	if started {
+		<-b.done
+	}
 }
