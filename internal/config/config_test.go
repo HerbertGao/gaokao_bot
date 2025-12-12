@@ -110,6 +110,9 @@ func TestValidate_Success(t *testing.T) {
 			Name:     "testdb",
 			Username: "testuser",
 		},
+		CORS: CORSConfig{
+			AllowedOrigins: []string{"https://example.com"},
+		},
 	}
 
 	err := cfg.Validate()
@@ -135,11 +138,106 @@ func TestValidate_RequiresBotToken(t *testing.T) {
 			Name:     "testdb",
 			Username: "testuser",
 		},
+		CORS: CORSConfig{
+			AllowedOrigins: []string{"https://example.com"},
+		},
 	}
 
 	err := cfg.Validate()
 	if err == nil {
 		t.Error("Validate() should return error when bot token is missing")
+	}
+}
+
+func TestValidate_RequiresCORSOrigins(t *testing.T) {
+	cfg := &Config{
+		App: AppConfig{
+			Env:  "dev",
+			Port: 8080,
+		},
+		Telegram: TelegramConfig{
+			Bot: BotConfig{
+				Token: "test_token",
+			},
+		},
+		Database: DatabaseConfig{
+			Host:     "localhost",
+			Port:     3306,
+			Name:     "testdb",
+			Username: "testuser",
+		},
+		CORS: CORSConfig{
+			AllowedOrigins: []string{}, // 空列表
+		},
+	}
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Error("Validate() should return error when CORS allowed origins is empty")
+	}
+}
+
+func TestValidate_CORSOriginsProtocol(t *testing.T) {
+	tests := []struct {
+		name    string
+		origins []string
+		wantErr bool
+	}{
+		{
+			name:    "Valid origins with http and https",
+			origins: []string{"http://localhost:3000", "https://example.com"},
+			wantErr: false,
+		},
+		{
+			name:    "Invalid origin without protocol",
+			origins: []string{"localhost:3000"},
+			wantErr: true,
+		},
+		{
+			name:    "Invalid origin with only domain",
+			origins: []string{"example.com"},
+			wantErr: true,
+		},
+		{
+			name:    "Mixed valid and invalid origins",
+			origins: []string{"https://example.com", "localhost:3000"},
+			wantErr: true,
+		},
+		{
+			name:    "Valid origins only https",
+			origins: []string{"https://web.telegram.org", "https://example.com"},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{
+				App: AppConfig{
+					Env:  "dev",
+					Port: 8080,
+				},
+				Telegram: TelegramConfig{
+					Bot: BotConfig{
+						Token: "test_token",
+					},
+				},
+				Database: DatabaseConfig{
+					Host:     "localhost",
+					Port:     3306,
+					Name:     "testdb",
+					Username: "testuser",
+				},
+				CORS: CORSConfig{
+					AllowedOrigins: tt.origins,
+				},
+			}
+
+			err := cfg.Validate()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }
 
@@ -159,6 +257,7 @@ func TestValidate_DatabaseConfigRequired(t *testing.T) {
 					Name:     "testdb",
 					Username: "testuser",
 				},
+				CORS: CORSConfig{AllowedOrigins: []string{"https://example.com"}},
 			},
 		},
 		{
@@ -172,6 +271,7 @@ func TestValidate_DatabaseConfigRequired(t *testing.T) {
 					Name:     "", // 缺少
 					Username: "testuser",
 				},
+				CORS: CORSConfig{AllowedOrigins: []string{"https://example.com"}},
 			},
 		},
 		{
@@ -185,6 +285,7 @@ func TestValidate_DatabaseConfigRequired(t *testing.T) {
 					Name:     "testdb",
 					Username: "", // 缺少
 				},
+				CORS: CORSConfig{AllowedOrigins: []string{"https://example.com"}},
 			},
 		},
 	}
@@ -212,6 +313,7 @@ func TestValidate_InvalidPorts(t *testing.T) {
 				Database: DatabaseConfig{
 					Host: "localhost", Port: 3306, Name: "testdb", Username: "testuser",
 				},
+				CORS: CORSConfig{AllowedOrigins: []string{"https://example.com"}},
 			},
 		},
 		{
@@ -222,6 +324,7 @@ func TestValidate_InvalidPorts(t *testing.T) {
 				Database: DatabaseConfig{
 					Host: "localhost", Port: 3306, Name: "testdb", Username: "testuser",
 				},
+				CORS: CORSConfig{AllowedOrigins: []string{"https://example.com"}},
 			},
 		},
 		{
@@ -232,6 +335,7 @@ func TestValidate_InvalidPorts(t *testing.T) {
 				Database: DatabaseConfig{
 					Host: "localhost", Port: 0, Name: "testdb", Username: "testuser",
 				},
+				CORS: CORSConfig{AllowedOrigins: []string{"https://example.com"}},
 			},
 		},
 		{
@@ -242,6 +346,7 @@ func TestValidate_InvalidPorts(t *testing.T) {
 				Database: DatabaseConfig{
 					Host: "localhost", Port: 999999, Name: "testdb", Username: "testuser",
 				},
+				CORS: CORSConfig{AllowedOrigins: []string{"https://example.com"}},
 			},
 		},
 	}
@@ -368,6 +473,109 @@ func TestGetEnvAsBool(t *testing.T) {
 			got := getEnvAsBool(tt.envKey, tt.defaultValue)
 			if got != tt.want {
 				t.Errorf("getEnvAsBool() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetEnvAsSlice(t *testing.T) {
+	tests := []struct {
+		name         string
+		envKey       string
+		envValue     string
+		defaultValue []string
+		want         []string
+	}{
+		{
+			name:         "Valid comma-separated values",
+			envKey:       "TEST_SLICE",
+			envValue:     "value1,value2,value3",
+			defaultValue: []string{"default"},
+			want:         []string{"value1", "value2", "value3"},
+		},
+		{
+			name:         "Values with spaces",
+			envKey:       "TEST_SLICE_SPACES",
+			envValue:     " value1 , value2 , value3 ",
+			defaultValue: []string{"default"},
+			want:         []string{"value1", "value2", "value3"},
+		},
+		{
+			name:         "Single value",
+			envKey:       "TEST_SLICE_SINGLE",
+			envValue:     "single",
+			defaultValue: []string{"default"},
+			want:         []string{"single"},
+		},
+		{
+			name:         "Empty string",
+			envKey:       "TEST_SLICE_EMPTY",
+			envValue:     "",
+			defaultValue: []string{"default1", "default2"},
+			want:         []string{"default1", "default2"},
+		},
+		{
+			name:         "Values with empty parts",
+			envKey:       "TEST_SLICE_EMPTY_PARTS",
+			envValue:     "value1,,value2,  ,value3",
+			defaultValue: []string{"default"},
+			want:         []string{"value1", "value2", "value3"},
+		},
+		{
+			name:         "Only commas and spaces",
+			envKey:       "TEST_SLICE_ONLY_SEPARATORS",
+			envValue:     " , , , ",
+			defaultValue: []string{"default"},
+			want:         []string{"default"},
+		},
+		{
+			name:         "CORS origins example",
+			envKey:       "TEST_CORS_ORIGINS",
+			envValue:     "https://web.telegram.org,http://localhost:5173,http://localhost:3000",
+			defaultValue: []string{},
+			want:         []string{"https://web.telegram.org", "http://localhost:5173", "http://localhost:3000"},
+		},
+		{
+			name:         "Origins with trailing slashes - should be normalized",
+			envKey:       "TEST_TRAILING_SLASH",
+			envValue:     "https://example.com/,http://localhost:3000/",
+			defaultValue: []string{},
+			want:         []string{"https://example.com", "http://localhost:3000"},
+		},
+		{
+			name:         "Mixed origins with and without trailing slashes",
+			envKey:       "TEST_MIXED_SLASH",
+			envValue:     "https://example.com,https://other.com/,http://localhost:5173/",
+			defaultValue: []string{},
+			want:         []string{"https://example.com", "https://other.com", "http://localhost:5173"},
+		},
+		{
+			name:         "Origin with path should keep path but remove trailing slash",
+			envKey:       "TEST_PATH_SLASH",
+			envValue:     "https://example.com/api/",
+			defaultValue: []string{},
+			want:         []string{"https://example.com/api"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.envValue != "" {
+				_ = os.Setenv(tt.envKey, tt.envValue)
+				defer func() {
+					_ = os.Unsetenv(tt.envKey)
+				}()
+			}
+
+			got := getEnvAsSlice(tt.envKey, tt.defaultValue)
+			if len(got) != len(tt.want) {
+				t.Errorf("getEnvAsSlice() length = %d, want %d", len(got), len(tt.want))
+				return
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Errorf("getEnvAsSlice()[%d] = %q, want %q", i, got[i], tt.want[i])
+				}
 			}
 		})
 	}

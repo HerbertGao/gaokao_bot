@@ -57,6 +57,9 @@ func main() {
 	// 初始化日志
 	logger := initLogger(cfg.Log)
 
+	// 记录 CORS 配置（用于调试）
+	logger.Infof("CORS 允许来源 (%d): %v", len(cfg.CORS.AllowedOrigins), cfg.CORS.AllowedOrigins)
+
 	// 初始化数据库（带重试逻辑，适用于容器化环境）
 	// 生产环境：重试 10 次（最长等待约 60 秒）
 	// 非生产环境：重试 5 次（快速失败）
@@ -143,7 +146,7 @@ func main() {
 	skipValidation := cfg.App.Env != "prod"
 	// 仅在 debug 日志级别下启用 GIN 访问日志
 	enableGinLogger := cfg.Log.Level == "debug"
-	router, rateLimiter := api.NewRouter(db, cfg.Telegram.Bot.Token, userTemplateService, skipValidation, enableGinLogger)
+	router, rateLimiter := api.NewRouter(db, cfg.Telegram.Bot.Token, userTemplateService, skipValidation, enableGinLogger, cfg.CORS.AllowedOrigins)
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.App.Port),
 		Handler: router,

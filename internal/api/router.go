@@ -16,6 +16,7 @@ func NewRouter(
 	templateService *service.UserTemplateService,
 	skipValidation bool,
 	enableLogger bool,
+	allowedOrigins []string,
 ) (*gin.Engine, *middleware.RateLimiter) {
 	// 根据是否启用日志来创建路由器
 	var router *gin.Engine
@@ -28,8 +29,8 @@ func NewRouter(
 		router.Use(gin.Recovery())
 	}
 
-	// 添加 CORS 中间件
-	router.Use(middleware.CORSMiddleware())
+	// 添加 CORS 中间件（从配置读取允许的域名）
+	router.Use(middleware.CORSMiddleware(allowedOrigins))
 
 	// 创建处理器
 	templateHandler := handler.NewTemplateHandler(templateService)

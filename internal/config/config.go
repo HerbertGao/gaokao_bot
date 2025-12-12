@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron/v3"
@@ -17,6 +18,7 @@ type Config struct {
 	Snowflake SnowflakeConfig
 	Log       LogConfig
 	Task      TaskConfig
+	CORS      CORSConfig
 }
 
 // AppConfig 应用配置
@@ -82,6 +84,11 @@ type DailySendConfig struct {
 	Cron    string
 }
 
+// CORSConfig CORS 配置
+type CORSConfig struct {
+	AllowedOrigins []string
+}
+
 // Load 加载配置
 func Load(env string) (*Config, error) {
 	// 尝试加载环境特定的 .env 文件
@@ -137,6 +144,15 @@ func Load(env string) (*Config, error) {
 				Cron:    getEnv("TASK_DAILY_SEND_CRON", "0 0 * * * *"),
 			},
 		},
+		CORS: CORSConfig{
+			AllowedOrigins: getEnvAsSlice("CORS_ALLOWED_ORIGINS", []string{
+				"https://web.telegram.org",
+				"http://localhost:5173",
+				"http://localhost:3000",
+				"http://127.0.0.1:5173",
+				"http://127.0.0.1:3000",
+			}),
+		},
 	}
 
 	// 验证关键配置
@@ -185,6 +201,18 @@ func (c *Config) Validate() error {
 		}
 	}
 
+	// 验证 CORS 配置
+	if len(c.CORS.AllowedOrigins) == 0 {
+		return fmt.Errorf("必须配置至少一个 CORS 允许来源 (CORS_ALLOWED_ORIGINS)")
+	}
+
+	// 验证每个 CORS origin 都包含正确的协议
+	for _, origin := range c.CORS.AllowedOrigins {
+		if !strings.HasPrefix(origin, "http://") && !strings.HasPrefix(origin, "https://") {
+			return fmt.Errorf("CORS 来源必须包含协议 (http:// 或 https://)，无效值: %s", origin)
+		}
+	}
+
 	return nil
 }
 
@@ -221,6 +249,28 @@ func getEnvAsBool(key string, defaultValue bool) bool {
 	if value := os.Getenv(key); value != "" {
 		if boolValue, err := strconv.ParseBool(value); err == nil {
 			return boolValue
+		}
+	}
+	return defaultValue
+}
+
+// getEnvAsSlice 获取环境变量并转换为字符串切片（以逗号分隔），如果不存在则返回默认值
+// 自动标准化 origins：去除首尾空格和尾部斜杠
+func getEnvAsSlice(key string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		// 按逗号分隔并去除空格
+		parts := strings.Split(value, ",")
+		result := make([]string, 0, len(parts))
+		for _, part := range parts {
+			trimmed := strings.TrimSpace(part)
+			// 标准化：移除尾部斜杠（防止 https://example.com 和 https://example.com/ 不匹配）
+			trimmed = strings.TrimSuffix(trimmed, "/")
+			if trimmed != "" {
+				result = append(result, trimmed)
+			}
+		}
+		if len(result) > 0 {
+			return result
 		}
 	}
 	return defaultValue

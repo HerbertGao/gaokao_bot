@@ -1,37 +1,76 @@
 package middleware
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-// allowedOrigins 允许的源列表
-// 在生产环境中应该从配置文件读取
-var allowedOrigins = []string{
-	"https://web.telegram.org",
-	"http://localhost:5173",
-	"http://localhost:3000",
-	"http://127.0.0.1:5173",
-	"http://127.0.0.1:3000",
+const (
+	// CORSMaxAge CORS 预检请求缓存时间（秒）- 24小时
+	CORSMaxAge = "86400"
+)
+
+// isTelegramOrigin 检查一个 origin 是否是真正的 Telegram 域名
+// 使用 URL 解析确保精确匹配，防止子串攻击
+//
+// 设计决策：
+// - URL解析失败时静默返回false（而非记录日志）是有意为之
+// - 原因：格式错误的origins是常见的（恶意请求、配置错误等）
+// - 在每个请求上记录日志会造成日志污染
+// - 配置验证阶段（Validate()）已经检查了协议格式
+func isTelegramOrigin(origin string) bool {
+	u, err := url.Parse(origin)
+	if err != nil {
+		// 静默返回false：格式错误的origin不是有效的Telegram域名
+		// 配置阶段的验证已经确保了allowedOrigins的格式正确性
+		return false
+	}
+
+	host := u.Hostname() // 获取主机名（不包含端口）
+
+	// 必须是 telegram.org 或其子域名
+	return host == "telegram.org" || strings.HasSuffix(host, ".telegram.org")
 }
 
 // isOriginAllowed 检查 origin 是否被允许
-func isOriginAllowed(origin string) bool {
+func isOriginAllowed(origin string, allowedOrigins []string) bool {
+	// 检查是否有 telegram.org 域名在允许列表中
+	hasTelegramOrigin := false
 	for _, allowed := range allowedOrigins {
 		if allowed == origin {
 			return true
 		}
-		// 支持 Telegram Mini App 的动态域名
-		if strings.HasSuffix(origin, ".telegram.org") {
-			return true
+		// 检查是否显式允许了真正的 telegram.org 域名
+		// 使用 URL 解析防止 "nottelegram.org" 等欺骗性域名触发通配符
+		if isTelegramOrigin(allowed) {
+			hasTelegramOrigin = true
 		}
 	}
+
+	// 仅当 allowedOrigins 中包含 telegram.org 相关域名时，才启用通配符匹配
+	// 支持 Telegram Mini App 的动态子域名
+	// 注意：这允许任何 *.telegram.org 子域名（例如 myapp.telegram.org）
+	// 这是 Telegram Mini Apps 的预期行为，因为它们可以使用各种子域名。
+	// 使用 isTelegramOrigin() 进行精确的主机名检查，
+	// 防止类似 "telegram.org.evil.com" 的欺骗攻击，同时正确处理端口号。
+	//
+	// 安全权衡：信任所有 telegram.org 子域名是可接受的，因为：
+	// 1. telegram.org 域名由 Telegram 控制
+	// 2. Telegram Mini Apps 需要动态子域名支持
+	// 3. URL 解析和主机名检查防止域名欺骗
+	// 4. 仅在显式配置 telegram.org 时启用（非全局通配符）
+	if hasTelegramOrigin && isTelegramOrigin(origin) {
+		return true
+	}
+
 	return false
 }
 
 // CORSMiddleware CORS 中间件
-func CORSMiddleware() gin.HandlerFunc {
+// allowedOrigins: 允许的源列表，从配置文件读取
+func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 
@@ -42,12 +81,12 @@ func CORSMiddleware() gin.HandlerFunc {
 		}
 
 		// 验证 origin 是否在白名单中
-		if isOriginAllowed(origin) {
+		if isOriginAllowed(origin, allowedOrigins) {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-Telegram-Init-Data")
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
-			c.Writer.Header().Set("Access-Control-Max-Age", "86400")
+			c.Writer.Header().Set("Access-Control-Max-Age", CORSMaxAge)
 		}
 
 		if c.Request.Method == "OPTIONS" {

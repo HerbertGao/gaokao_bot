@@ -65,7 +65,7 @@ go run cmd/gaokao_bot/main.go -env=dev
 ## License
 The MIT License (MIT). Please see [License File](LICENSE) for more information.
 
-[ico-actions]: https://github.com/HerbertGao/gaokao_bot/workflows/Go%20CI/badge.svg
+[ico-actions]: https://github.com/HerbertGao/gaokao_bot/actions/workflows/release.yml/badge.svg
 [ico-telegram]: https://img.shields.io/badge/@gaokao__bot-2CA5E0.svg?style=flat-square&logo=telegram&label=Telegram
 [ico-telegram-channel]: https://img.shields.io/badge/@GaokaoCountdown-2CA5E0.svg?style=flat-square&logo=telegram&label=Telegram
 [ico-releases]: https://img.shields.io/github/release/HerbertGao/gaokao_bot
