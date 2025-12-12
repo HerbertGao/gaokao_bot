@@ -89,7 +89,6 @@ jobs:
     - name: Build
       run: |
         go build -v -o bin/gaokao_bot ./cmd/gaokao_bot
-        go build -v -o bin/migrate ./cmd/migrate
 
     - name: Verify binaries
       run: |
