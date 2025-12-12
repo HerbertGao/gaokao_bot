@@ -171,21 +171,22 @@ func (u *Updater) GetDownloadURL(tagVersion string) (string, error) {
 }
 
 // getTargetAssetName 获取目标平台对应的文件名关键字
+// 返回值需要匹配 release.yml 中的 artifact_name
 func (u *Updater) getTargetAssetName() (string, error) {
 	osName := runtime.GOOS
 	arch := runtime.GOARCH
 
 	switch {
 	case osName == "darwin" && arch == "arm64":
-		return "darwin_arm64", nil
+		return "macos_arm64", nil
 	case osName == "darwin" && arch == "amd64":
-		return "darwin_amd64", nil
+		return "macos_x86_64", nil
 	case osName == "linux" && arch == "amd64":
-		return "linux_amd64", nil
+		return "linux_x86_64", nil
 	case osName == "linux" && arch == "arm64":
 		return "linux_arm64", nil
 	case osName == "windows" && arch == "amd64":
-		return "windows_amd64", nil
+		return "windows_x86_64", nil
 	default:
 		return "", fmt.Errorf("不支持的平台: %s/%s", osName, arch)
 	}

@@ -1,6 +1,7 @@
 package updater
 
 import (
+	"runtime"
 	"testing"
 )
 
@@ -154,9 +155,103 @@ func TestGetTargetAssetName(t *testing.T) {
 		t.Error("getTargetAssetName() returned empty string")
 	}
 
-	// 验证返回的名称格式正确（应该包含下划线）
-	if len(assetName) == 0 {
-		t.Error("Asset name should not be empty")
+	// 验证返回的名称格式正确
+	// 应该匹配 release.yml 中的 artifact_name 格式
+	expectedSuffixes := []string{"_arm64", "_x86_64"}
+	expectedPrefixes := []string{"macos", "linux", "windows"}
+
+	hasValidPrefix := false
+	for _, prefix := range expectedPrefixes {
+		if len(assetName) >= len(prefix) && assetName[:len(prefix)] == prefix {
+			hasValidPrefix = true
+			break
+		}
+	}
+
+	hasValidSuffix := false
+	for _, suffix := range expectedSuffixes {
+		if len(assetName) >= len(suffix) && assetName[len(assetName)-len(suffix):] == suffix {
+			hasValidSuffix = true
+			break
+		}
+	}
+
+	if !hasValidPrefix {
+		t.Errorf("Asset name %q should start with one of %v", assetName, expectedPrefixes)
+	}
+	if !hasValidSuffix {
+		t.Errorf("Asset name %q should end with one of %v", assetName, expectedSuffixes)
+	}
+
+	// 验证名称格式: {os}_{arch}，例如 macos_arm64
+	if !hasValidPrefix || !hasValidSuffix {
+		t.Errorf("Asset name format incorrect: %q", assetName)
+	}
+}
+
+// TestGetTargetAssetNameMapping 验证所有平台的资产名称映射正确
+// 确保与 .github/workflows/release.yml 中的 artifact_name 保持一致
+func TestGetTargetAssetNameMapping(t *testing.T) {
+	tests := []struct {
+		goos     string
+		goarch   string
+		expected string
+	}{
+		{goos: "darwin", goarch: "arm64", expected: "macos_arm64"},
+		{goos: "darwin", goarch: "amd64", expected: "macos_x86_64"},
+		{goos: "linux", goarch: "amd64", expected: "linux_x86_64"},
+		{goos: "linux", goarch: "arm64", expected: "linux_arm64"},
+		{goos: "windows", goarch: "amd64", expected: "windows_x86_64"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.goos+"_"+tt.goarch, func(t *testing.T) {
+			// 暂时保存原始值
+			oldGOOS := runtime.GOOS
+			oldGOARCH := runtime.GOARCH
+
+			// 注意：runtime.GOOS 和 runtime.GOARCH 是只读常量，无法修改
+			// 这个测试主要用于文档化预期的映射关系
+			// 实际测试在真实平台上运行时会验证当前平台
+
+			// 如果当前平台匹配，验证结果
+			if runtime.GOOS == tt.goos && runtime.GOARCH == tt.goarch {
+				u := NewUpdater()
+				got, err := u.getTargetAssetName()
+				if err != nil {
+					t.Errorf("getTargetAssetName() error = %v", err)
+					return
+				}
+				if got != tt.expected {
+					t.Errorf("getTargetAssetName() = %q, want %q", got, tt.expected)
+				}
+			}
+
+			// 防止编译器警告
+			_ = oldGOOS
+			_ = oldGOARCH
+		})
+	}
+
+	// 额外验证：当前平台的资产名称应该匹配 release.yml 中的某个 artifact_name
+	u := NewUpdater()
+	assetName, err := u.getTargetAssetName()
+	if err != nil {
+		t.Skipf("Current platform not supported: %v", err)
+	}
+
+	// release.yml 中定义的所有 artifact_name（去掉 gaokao_bot_ 前缀）
+	validAssetNames := map[string]bool{
+		"macos_arm64":   true,
+		"macos_x86_64":  true,
+		"linux_x86_64":  true,
+		"linux_arm64":   true,
+		"windows_x86_64": true,
+	}
+
+	if !validAssetNames[assetName] {
+		t.Errorf("Asset name %q does not match any artifact in release.yml", assetName)
+		t.Logf("Valid asset names: %v", validAssetNames)
 	}
 }
 
