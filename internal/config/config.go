@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron/v3"
@@ -17,6 +18,7 @@ type Config struct {
 	Snowflake SnowflakeConfig
 	Log       LogConfig
 	Task      TaskConfig
+	CORS      CORSConfig
 }
 
 // AppConfig 应用配置
@@ -82,6 +84,11 @@ type DailySendConfig struct {
 	Cron    string
 }
 
+// CORSConfig CORS 配置
+type CORSConfig struct {
+	AllowedOrigins []string
+}
+
 // Load 加载配置
 func Load(env string) (*Config, error) {
 	// 尝试加载环境特定的 .env 文件
@@ -136,6 +143,13 @@ func Load(env string) (*Config, error) {
 				Enabled: getEnvAsBool("TASK_DAILY_SEND_ENABLED", true),
 				Cron:    getEnv("TASK_DAILY_SEND_CRON", "0 0 * * * *"),
 			},
+		},
+		CORS: CORSConfig{
+			AllowedOrigins: getEnvAsSlice("CORS_ALLOWED_ORIGINS", []string{
+				"https://web.telegram.org",
+				"http://localhost:5173",
+				"http://localhost:3000",
+			}),
 		},
 	}
 
@@ -221,6 +235,25 @@ func getEnvAsBool(key string, defaultValue bool) bool {
 	if value := os.Getenv(key); value != "" {
 		if boolValue, err := strconv.ParseBool(value); err == nil {
 			return boolValue
+		}
+	}
+	return defaultValue
+}
+
+// getEnvAsSlice 获取环境变量并转换为字符串切片（以逗号分隔），如果不存在则返回默认值
+func getEnvAsSlice(key string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		// 按逗号分隔并去除空格
+		parts := strings.Split(value, ",")
+		result := make([]string, 0, len(parts))
+		for _, part := range parts {
+			trimmed := strings.TrimSpace(part)
+			if trimmed != "" {
+				result = append(result, trimmed)
+			}
+		}
+		if len(result) > 0 {
+			return result
 		}
 	}
 	return defaultValue

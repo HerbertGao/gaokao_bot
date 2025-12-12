@@ -6,18 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// allowedOrigins 允许的源列表
-// 在生产环境中应该从配置文件读取
-var allowedOrigins = []string{
-	"https://web.telegram.org",
-	"http://localhost:5173",
-	"http://localhost:3000",
-	"http://127.0.0.1:5173",
-	"http://127.0.0.1:3000",
-}
-
 // isOriginAllowed 检查 origin 是否被允许
-func isOriginAllowed(origin string) bool {
+func isOriginAllowed(origin string, allowedOrigins []string) bool {
 	for _, allowed := range allowedOrigins {
 		if allowed == origin {
 			return true
@@ -31,7 +21,8 @@ func isOriginAllowed(origin string) bool {
 }
 
 // CORSMiddleware CORS 中间件
-func CORSMiddleware() gin.HandlerFunc {
+// allowedOrigins: 允许的源列表，从配置文件读取
+func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 
@@ -42,7 +33,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		}
 
 		// 验证 origin 是否在白名单中
-		if isOriginAllowed(origin) {
+		if isOriginAllowed(origin, allowedOrigins) {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-Telegram-Init-Data")
