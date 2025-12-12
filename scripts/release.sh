@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 发布脚本
-# 用法: ./scripts/release.sh [major|minor|patch|build]
+# 用法: ./scripts/release.sh [major|minor|patch|build|x.y.z]
 
 set -e
 
@@ -117,16 +117,17 @@ show_release_info() {
 # 主流程
 main() {
     if [ $# -eq 0 ]; then
-        echo -e "${RED}错误: 请指定版本类型${NC}"
-        echo "用法: $0 [major|minor|patch|build]"
+        echo -e "${RED}错误: 请指定版本类型或版本号${NC}"
+        echo "用法: $0 [major|minor|patch|build|x.y.z]"
         echo "  major  - 主版本号 (1.0.0 -> 2.0.0)"
         echo "  minor  - 次版本号 (1.0.0 -> 1.1.0)"
         echo "  patch  - 补丁版本 (1.0.0 -> 1.0.1)"
         echo "  build  - 构建版本 (1.0.0 -> 1.0.0.1)"
+        echo "  x.y.z  - 自定义版本号 (如 2.0.0 或 2.0.0.1)"
         exit 1
     fi
 
-    local version_type=$1
+    local version_input=$1
 
     echo -e "${BLUE}开始发布流程...${NC}"
 
@@ -134,7 +135,7 @@ main() {
     check_uncommitted_changes
 
     echo -e "${BLUE}更新版本...${NC}"
-    ./scripts/version.sh "$version_type"
+    ./scripts/version.sh "$version_input"
 
     local new_version=$(grep '^var Version = ' internal/version/version.go | sed 's/var Version = "\(.*\)"/\1/')
 

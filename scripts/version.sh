@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 版本管理脚本
-# 用法: ./scripts/version.sh [major|minor|patch|build]
+# 用法: ./scripts/version.sh [major|minor|patch|build|x.y.z]
 
 set -e
 
@@ -16,7 +16,47 @@ get_current_version() {
     grep '^var Version = ' internal/version/version.go | sed 's/var Version = "\(.*\)"/\1/'
 }
 
-# 更新版本号
+# 验证版本号格式 (x.y.z 或 x.y.z.b)
+validate_version_format() {
+    local version=$1
+    if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 设置自定义版本号
+set_custom_version() {
+    local new_version=$1
+    local current_version=$(get_current_version)
+
+    echo -e "${YELLOW}当前版本: ${current_version}${NC}"
+    echo -e "${YELLOW}新版本: ${new_version}${NC}"
+
+    # 更新 internal/version/version.go
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s/^var Version = \".*\"/var Version = \"${new_version}\"/" internal/version/version.go
+    else
+        sed -i "s/^var Version = \".*\"/var Version = \"${new_version}\"/" internal/version/version.go
+    fi
+
+    echo -e "${GREEN}✓ 已更新 internal/version/version.go 版本为 ${new_version}${NC}"
+
+    # 更新 README.md 版本（如果存在）
+    if [ -f "README.md" ]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/版本.*[0-9]\+\.[0-9]\+\.[0-9]\+/版本 ${new_version}/g" README.md
+        else
+            sed -i "s/版本.*[0-9]\+\.[0-9]\+\.[0-9]\+/版本 ${new_version}/g" README.md
+        fi
+        echo -e "${GREEN}✓ 已更新 README.md 版本信息${NC}"
+    fi
+
+    echo "$new_version"
+}
+
+# 更新版本号（自动递增）
 update_version() {
     local version_type=$1
     local current_version=$(get_current_version)
@@ -49,7 +89,7 @@ update_version() {
             build=$((build + 1))
             ;;
         *)
-            echo -e "${RED}错误: 无效的版本类型. 使用: major|minor|patch|build${NC}"
+            echo -e "${RED}错误: 无效的版本类型. 使用: major|minor|patch|build 或直接指定版本号 (如 2.0.0)${NC}"
             exit 1
             ;;
     esac
@@ -104,15 +144,36 @@ show_version() {
 main() {
     if [ $# -eq 0 ]; then
         show_version
-        echo -e "${YELLOW}用法: $0 [major|minor|patch|build]${NC}"
+        echo -e "${YELLOW}用法: $0 [major|minor|patch|build|x.y.z]${NC}"
         echo "  major  - 主版本号 (1.0.0 -> 2.0.0)"
         echo "  minor  - 次版本号 (1.0.0 -> 1.1.0)"
         echo "  patch  - 补丁版本 (1.0.0 -> 1.0.1)"
         echo "  build  - 构建版本 (1.0.0 -> 1.0.0.1)"
+        echo "  x.y.z  - 自定义版本号 (如 2.0.0 或 2.0.0.1)"
         exit 0
     fi
 
-    update_version $1
+    local input=$1
+
+    # 检查是否为自定义版本号格式
+    if validate_version_format "$input"; then
+        echo -e "${BLUE}使用自定义版本号: ${input}${NC}"
+        new_version=$(set_custom_version "$input")
+    else
+        # 自动递增版本号
+        update_version "$input"
+        new_version=$(get_current_version)
+    fi
+
+    echo -e "${YELLOW}Git 状态:${NC}"
+    git status --porcelain
+
+    echo -e "${GREEN}版本更新完成！${NC}"
+    echo -e "${YELLOW}下一步操作建议:${NC}"
+    echo "1. 测试代码: go build ./cmd/gaokao_bot && go test ./..."
+    echo "2. 提交更改: git add . && git commit -m \"chore: bump version to ${new_version}\""
+    echo "3. 创建标签: git tag v${new_version}"
+    echo "4. 推送到远程: git push && git push origin v${new_version}"
 }
 
 main "$@"
