@@ -146,6 +146,58 @@ func TestIsOriginAllowed_WithoutTelegramInList(t *testing.T) {
 	}
 }
 
+func TestIsOriginAllowed_SubstringMatchAttack(t *testing.T) {
+	// 测试子串匹配漏洞修复：
+	// 包含 "telegram.org" 子串但不是真正的 Telegram 域名的恶意域名
+	// 不应触发通配符匹配
+	fakeOrigins := []string{
+		"https://nottelegram.org", // 包含 "telegram.org" 子串
+		"https://faketelegram.org.example.com", // 包含 "telegram.org" 子串
+		"https://my-telegram.org-service.com", // 包含 "telegram.org" 子串
+	}
+
+	tests := []struct {
+		name   string
+		origin string
+		want   bool
+	}{
+		{
+			name:   "Real telegram.org subdomain should be rejected (wildcard not triggered)",
+			origin: "https://app.telegram.org",
+			want:   false,
+		},
+		{
+			name:   "Real web.telegram.org should be rejected (wildcard not triggered)",
+			origin: "https://web.telegram.org",
+			want:   false,
+		},
+		{
+			name:   "Exact match - nottelegram.org should work",
+			origin: "https://nottelegram.org",
+			want:   true,
+		},
+		{
+			name:   "Exact match - faketelegram.org.example.com should work",
+			origin: "https://faketelegram.org.example.com",
+			want:   true,
+		},
+		{
+			name:   "Non-matching origin should be rejected",
+			origin: "https://evil.com",
+			want:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isOriginAllowed(tt.origin, fakeOrigins)
+			if got != tt.want {
+				t.Errorf("isOriginAllowed(%q, %v) = %v, want %v", tt.origin, fakeOrigins, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestCORSMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

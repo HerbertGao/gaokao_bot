@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,20 @@ const (
 	CORSMaxAge = "86400"
 )
 
+// isTelegramOrigin 检查一个 origin 是否是真正的 Telegram 域名
+// 使用 URL 解析确保精确匹配，防止子串攻击
+func isTelegramOrigin(origin string) bool {
+	u, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+
+	host := u.Hostname() // 获取主机名（不包含端口）
+
+	// 必须是 telegram.org 或其子域名
+	return host == "telegram.org" || strings.HasSuffix(host, ".telegram.org")
+}
+
 // isOriginAllowed 检查 origin 是否被允许
 func isOriginAllowed(origin string, allowedOrigins []string) bool {
 	// 检查是否有 telegram.org 域名在允许列表中
@@ -19,8 +34,9 @@ func isOriginAllowed(origin string, allowedOrigins []string) bool {
 		if allowed == origin {
 			return true
 		}
-		// 检查是否显式允许了 telegram.org 相关域名
-		if strings.Contains(allowed, "telegram.org") {
+		// 检查是否显式允许了真正的 telegram.org 域名
+		// 使用 URL 解析防止 "nottelegram.org" 等欺骗性域名触发通配符
+		if isTelegramOrigin(allowed) {
 			hasTelegramOrigin = true
 		}
 	}
