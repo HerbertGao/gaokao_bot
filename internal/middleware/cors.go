@@ -45,15 +45,15 @@ func isOriginAllowed(origin string, allowedOrigins []string) bool {
 	// 支持 Telegram Mini App 的动态子域名
 	// 注意：这允许任何 *.telegram.org 子域名（例如 myapp.telegram.org）
 	// 这是 Telegram Mini Apps 的预期行为，因为它们可以使用各种子域名。
-	// strings.HasSuffix() 确保域名以 ".telegram.org" 结尾，
-	// 防止类似 "telegram.org.evil.com" 的欺骗攻击。
+	// 使用 isTelegramOrigin() 进行精确的主机名检查，
+	// 防止类似 "telegram.org.evil.com" 的欺骗攻击，同时正确处理端口号。
 	//
 	// 安全权衡：信任所有 telegram.org 子域名是可接受的，因为：
 	// 1. telegram.org 域名由 Telegram 控制
 	// 2. Telegram Mini Apps 需要动态子域名支持
-	// 3. HasSuffix 检查防止域名欺骗
+	// 3. URL 解析和主机名检查防止域名欺骗
 	// 4. 仅在显式配置 telegram.org 时启用（非全局通配符）
-	if hasTelegramOrigin && strings.HasSuffix(origin, ".telegram.org") {
+	if hasTelegramOrigin && isTelegramOrigin(origin) {
 		return true
 	}
 

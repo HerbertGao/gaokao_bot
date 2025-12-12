@@ -17,6 +17,79 @@ var testAllowedOrigins = []string{
 	"http://127.0.0.1:3000",
 }
 
+func TestIsTelegramOrigin(t *testing.T) {
+	tests := []struct {
+		name   string
+		origin string
+		want   bool
+	}{
+		{
+			name:   "Valid - telegram.org",
+			origin: "https://telegram.org",
+			want:   true,
+		},
+		{
+			name:   "Valid - web.telegram.org",
+			origin: "https://web.telegram.org",
+			want:   true,
+		},
+		{
+			name:   "Valid - subdomain.telegram.org",
+			origin: "https://app.mini.telegram.org",
+			want:   true,
+		},
+		{
+			name:   "Valid with port - telegram.org:443",
+			origin: "https://telegram.org:443",
+			want:   true,
+		},
+		{
+			name:   "Valid with port - web.telegram.org:8443",
+			origin: "https://web.telegram.org:8443",
+			want:   true,
+		},
+		{
+			name:   "Invalid - nottelegram.org",
+			origin: "https://nottelegram.org",
+			want:   false,
+		},
+		{
+			name:   "Invalid - telegram.org.evil.com",
+			origin: "https://telegram.org.evil.com",
+			want:   false,
+		},
+		{
+			name:   "Invalid with port - nottelegram.org:8443",
+			origin: "https://nottelegram.org:8443",
+			want:   false,
+		},
+		{
+			name:   "Invalid - faketelegram.org",
+			origin: "https://faketelegram.org",
+			want:   false,
+		},
+		{
+			name:   "Invalid URL",
+			origin: "not-a-url",
+			want:   false,
+		},
+		{
+			name:   "Empty string",
+			origin: "",
+			want:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isTelegramOrigin(tt.origin)
+			if got != tt.want {
+				t.Errorf("isTelegramOrigin(%q) = %v, want %v", tt.origin, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIsOriginAllowed_WithTelegramInList(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -59,6 +132,21 @@ func TestIsOriginAllowed_WithTelegramInList(t *testing.T) {
 			want:   true,
 		},
 		{
+			name:   "Telegram origin with port - should be allowed",
+			origin: "https://app.telegram.org:8443",
+			want:   true,
+		},
+		{
+			name:   "Telegram origin with port 443 - should be allowed",
+			origin: "https://web.telegram.org:443",
+			want:   true,
+		},
+		{
+			name:   "Telegram origin with custom port - should be allowed",
+			origin: "https://test.telegram.org:9000",
+			want:   true,
+		},
+		{
 			name:   "Not allowed origin",
 			origin: "https://evil.com",
 			want:   false,
@@ -76,6 +164,11 @@ func TestIsOriginAllowed_WithTelegramInList(t *testing.T) {
 		{
 			name:   "Domain spoofing - subdomain.telegram.org.evil.com",
 			origin: "https://app.telegram.org.evil.com",
+			want:   false,
+		},
+		{
+			name:   "Domain spoofing with port - telegram.org.evil.com:8443",
+			origin: "https://telegram.org.evil.com:8443",
 			want:   false,
 		},
 		{
