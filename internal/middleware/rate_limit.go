@@ -57,21 +57,29 @@ func (rl *RateLimiter) cleanupVisitors() {
 	for {
 		select {
 		case <-ticker.C:
-			// 收集需要删除的 key，避免在遍历 map 时修改
-			var keysToDelete []string
+			// 收集需要删除的 visitor 及其 key
+			// 保持 visitor 锁定直到删除完成，防止竞态条件
+			type expiredVisitor struct {
+				key string
+				v   *visitor
+			}
+			var toDelete []expiredVisitor
 
 			rl.mu.Lock()
 			for key, v := range rl.visitors {
 				v.mu.Lock()
 				if time.Since(v.lastSeen) > rl.cleanup {
-					keysToDelete = append(keysToDelete, key)
+					toDelete = append(toDelete, expiredVisitor{key: key, v: v})
+				} else {
+					// 如果不删除，立即解锁
+					v.mu.Unlock()
 				}
-				v.mu.Unlock()
 			}
 
-			// 删除过期的访客
-			for _, key := range keysToDelete {
-				delete(rl.visitors, key)
+			// 删除过期的访客（仍持有 visitor 锁，防止并发更新）
+			for _, item := range toDelete {
+				delete(rl.visitors, item.key)
+				item.v.mu.Unlock() // 删除后才解锁
 			}
 			rl.mu.Unlock()
 		case <-rl.done:

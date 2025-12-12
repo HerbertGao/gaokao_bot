@@ -26,8 +26,10 @@ type GaokaoBot struct {
 	handler *telegohandler.BotHandler
 	updates <-chan telego.Update
 	done    chan struct{}
-	started bool      // 标记 bot 是否成功启动
-	mu      sync.Mutex // 保护并发访问
+	started bool              // 标记 bot 是否成功启动
+	mu      sync.Mutex        // 保护并发访问
+	ctx     context.Context   // 用于控制 bot 生命周期
+	cancel  context.CancelFunc // 用于取消 context
 }
 
 // NewGaokaoBot 创建高考Bot
@@ -48,17 +50,21 @@ func NewGaokaoBot(
 
 // Start 启动Bot
 func (b *GaokaoBot) Start() error {
-	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
-	defer cancel()
+	// 创建用于 GetMe 的临时 context
+	getCtx, getCancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+	defer getCancel()
 
-	botUser, err := b.bot.GetMe(ctx)
+	botUser, err := b.bot.GetMe(getCtx)
 	if err != nil {
 		return err
 	}
 	b.logger.Infof("Bot authorized on account %s", botUser.Username)
 
-	// 启动长轮询
-	updates, err := b.bot.UpdatesViaLongPolling(context.TODO(), nil)
+	// 创建用于 bot 生命周期的 context
+	b.ctx, b.cancel = context.WithCancel(context.Background())
+
+	// 启动长轮询（使用可取消的 context，确保 Stop() 时能优雅关闭）
+	updates, err := b.bot.UpdatesViaLongPolling(b.ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -145,10 +151,16 @@ func (b *GaokaoBot) Stop() {
 	b.mu.Lock()
 	started := b.started
 	handler := b.handler
+	cancel := b.cancel
 	b.mu.Unlock()
 
 	// 只有在成功启动后才尝试停止
 	if started && handler != nil {
+		// 取消 context，停止长轮询
+		if cancel != nil {
+			cancel()
+		}
+
 		if err := handler.Stop(); err != nil {
 			b.logger.Errorf("Handler stop error: %v", err)
 		}
