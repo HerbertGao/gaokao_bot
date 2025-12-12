@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/herbertgao/gaokao_bot/pkg/constant"
 	"github.com/mymmrac/telego"
@@ -215,10 +216,13 @@ func (s *BotService) handleTemplateCommand(msg *telego.Message) {
 
 // truncateString 截断字符串到指定长度
 func truncateString(s string, maxLen int) string {
-	if len(s) <= maxLen {
+	// 使用 rune 数量而非字节数量，正确处理多字节 UTF-8 字符（如中文）
+	if utf8.RuneCountInString(s) <= maxLen {
 		return s
 	}
-	return s[:maxLen] + "..."
+	// 转换为 rune 切片以安全地截断，避免破坏 UTF-8 字符
+	runes := []rune(s)
+	return string(runes[:maxLen]) + "..."
 }
 
 // getContextErrorMessage 获取上下文错误的友好消息
