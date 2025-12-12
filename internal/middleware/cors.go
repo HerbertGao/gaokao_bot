@@ -14,9 +14,17 @@ const (
 
 // isTelegramOrigin 检查一个 origin 是否是真正的 Telegram 域名
 // 使用 URL 解析确保精确匹配，防止子串攻击
+//
+// 设计决策：
+// - URL解析失败时静默返回false（而非记录日志）是有意为之
+// - 原因：格式错误的origins是常见的（恶意请求、配置错误等）
+// - 在每个请求上记录日志会造成日志污染
+// - 配置验证阶段（Validate()）已经检查了协议格式
 func isTelegramOrigin(origin string) bool {
 	u, err := url.Parse(origin)
 	if err != nil {
+		// 静默返回false：格式错误的origin不是有效的Telegram域名
+		// 配置阶段的验证已经确保了allowedOrigins的格式正确性
 		return false
 	}
 

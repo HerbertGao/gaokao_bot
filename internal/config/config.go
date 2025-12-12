@@ -255,6 +255,7 @@ func getEnvAsBool(key string, defaultValue bool) bool {
 }
 
 // getEnvAsSlice 获取环境变量并转换为字符串切片（以逗号分隔），如果不存在则返回默认值
+// 自动标准化 origins：去除首尾空格和尾部斜杠
 func getEnvAsSlice(key string, defaultValue []string) []string {
 	if value := os.Getenv(key); value != "" {
 		// 按逗号分隔并去除空格
@@ -262,6 +263,8 @@ func getEnvAsSlice(key string, defaultValue []string) []string {
 		result := make([]string, 0, len(parts))
 		for _, part := range parts {
 			trimmed := strings.TrimSpace(part)
+			// 标准化：移除尾部斜杠（防止 https://example.com 和 https://example.com/ 不匹配）
+			trimmed = strings.TrimSuffix(trimmed, "/")
 			if trimmed != "" {
 				result = append(result, trimmed)
 			}

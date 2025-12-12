@@ -535,6 +535,27 @@ func TestGetEnvAsSlice(t *testing.T) {
 			defaultValue: []string{},
 			want:         []string{"https://web.telegram.org", "http://localhost:5173", "http://localhost:3000"},
 		},
+		{
+			name:         "Origins with trailing slashes - should be normalized",
+			envKey:       "TEST_TRAILING_SLASH",
+			envValue:     "https://example.com/,http://localhost:3000/",
+			defaultValue: []string{},
+			want:         []string{"https://example.com", "http://localhost:3000"},
+		},
+		{
+			name:         "Mixed origins with and without trailing slashes",
+			envKey:       "TEST_MIXED_SLASH",
+			envValue:     "https://example.com,https://other.com/,http://localhost:5173/",
+			defaultValue: []string{},
+			want:         []string{"https://example.com", "https://other.com", "http://localhost:5173"},
+		},
+		{
+			name:         "Origin with path should keep path but remove trailing slash",
+			envKey:       "TEST_PATH_SLASH",
+			envValue:     "https://example.com/api/",
+			defaultValue: []string{},
+			want:         []string{"https://example.com/api"},
+		},
 	}
 
 	for _, tt := range tests {
