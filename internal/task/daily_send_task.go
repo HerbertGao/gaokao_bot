@@ -38,7 +38,8 @@ func NewDailySendTask(
 	logger *logrus.Logger,
 ) *DailySendTask {
 	return &DailySendTask{
-		cron:                cron.New(cron.WithSeconds()),
+		// 使用北京时区初始化 cron，确保定时任务与 shouldSend() 的时区判断一致
+		cron:                cron.New(cron.WithSeconds(), cron.WithLocation(util.GetBJTLocation())),
 		bot:                 bot,
 		examDateService:     examDateService,
 		userTemplateService: userTemplateService,

@@ -25,6 +25,12 @@ func init() {
 	bjtLocation = loc
 }
 
+// GetBJTLocation 返回北京时区（UTC+8）
+// 用于需要明确使用北京时区的场景（如 cron 定时任务）
+func GetBJTLocation() *time.Location {
+	return bjtLocation
+}
+
 // NowBJT 返回当前北京时间（UTC+8）
 // 用于高考倒计时等需要明确使用北京时间的场景
 func NowBJT() time.Time {
