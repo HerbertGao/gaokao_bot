@@ -149,8 +149,9 @@ func (t *DailySendTask) shouldSend(exam model.ExamDate, now time.Time) bool {
 		return true
 	}
 
-	// 距离考试 > 1 天，仅在9:00发送
-	if hours > 24 && now.Hour() == 9 && now.Minute() == 0 {
+	// 距离考试 > 1 天，仅在 9:00 发送
+	// 允许 1 分钟的时间窗口（9:00-9:01），防止 cron 延迟导致错过发送
+	if hours > 24 && now.Hour() == 9 && now.Minute() <= 1 {
 		return true
 	}
 

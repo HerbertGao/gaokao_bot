@@ -39,11 +39,14 @@ func FormatNormal(t time.Time) string {
 // NormalizeToMinute 标准化时间到最近的整分钟
 // 四舍五入：秒 >= RoundingThresholdSeconds 进位到下一分钟，< RoundingThresholdSeconds 保持当前分钟
 // 用于定时任务的倒计时显示，避免出现"3天23小时59分钟59秒"等情况
+//
+// 注意：此函数保留输入时间的时区（通过 t.Location()）
+// 如果需要标准化到北京时间，请先使用 NowBJT() 或 time.In(bjtLocation) 转换时区
 func NormalizeToMinute(t time.Time) time.Time {
 	if t.Second() >= RoundingThresholdSeconds {
 		t = t.Add(time.Minute)
 	}
-	// 截断到整分钟
+	// 截断到整分钟（保留原时区）
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location())
 }
 

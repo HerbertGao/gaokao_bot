@@ -41,6 +41,7 @@ func main() {
 	if *doUpdate {
 		u := updater.NewUpdater()
 		if err := u.Update(); err != nil {
+			// 此时 logger 尚未初始化，直接使用 fmt.Fprintf 输出到 stderr
 			fmt.Fprintf(os.Stderr, "更新失败: %v\n", err)
 			os.Exit(1)
 		}
@@ -50,6 +51,7 @@ func main() {
 	// 加载配置
 	cfg, err := config.Load(*env)
 	if err != nil {
+		// 此时 logger 尚未初始化，直接使用 fmt.Fprintf 输出到 stderr
 		fmt.Fprintf(os.Stderr, "加载配置失败: %v\n", err)
 		os.Exit(1)
 	}

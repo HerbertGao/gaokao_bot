@@ -72,9 +72,15 @@ func TestDailySendTask_ShouldSend(t *testing.T) {
 			want:        false,
 		},
 		{
-			name:        "超过24小时，9:01不发送",
+			name:        "超过24小时，9:01应该发送（时间窗口容错）",
 			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, time.UTC),
 			currentTime: time.Date(2025, 6, 7, 9, 1, 0, 0, time.UTC), // 距离3天，当前时间9:01
+			want:        true,
+		},
+		{
+			name:        "超过24小时，9:02不发送（超出时间窗口）",
+			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, time.UTC),
+			currentTime: time.Date(2025, 6, 7, 9, 2, 0, 0, time.UTC), // 距离3天，当前时间9:02
 			want:        false,
 		},
 		{
