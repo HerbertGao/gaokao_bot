@@ -67,7 +67,21 @@ func (t *DailySendTask) Stop() {
 
 // execute 执行任务
 func (t *DailySendTask) execute() {
+	// 定时任务一般设置在整点，可能有±1分钟以内的误差
+	// 将时间标准化为最近的整分钟，防止出现"还剩3天23小时59分钟59秒"或"还剩4天1秒"的情况
+	// 四舍五入：秒 >= 30 则进位到下一分钟，< 30 则保持当前分钟
 	now := time.Now()
+	minute := now.Minute()
+	hour := now.Hour()
+
+	if now.Second() >= 30 {
+		// 进位到下一分钟
+		now = now.Add(time.Minute)
+		minute = now.Minute()
+		hour = now.Hour()
+	}
+
+	now = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
 
 	// 获取符合条件的考试
 	exams, err := t.examDateService.GetExamsInRange(now)

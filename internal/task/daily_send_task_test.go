@@ -153,3 +153,238 @@ func TestDailySendTask_StartAndStop(t *testing.T) {
 	// 确保可以正常停止
 	task.Stop()
 }
+
+// TestTimeNormalization 测试时间标准化逻辑
+// 定时任务一般设置在整点，可能有±1分钟以内的误差
+// 将时间标准化为最近的整分钟（基于北京时间 UTC+8）
+// 四舍五入：秒 >= 30 进位到下一分钟，< 30 保持当前分钟
+func TestTimeNormalization(t *testing.T) {
+	bjtZone := time.FixedZone("BJT", 8*3600) // UTC+8
+
+	tests := []struct {
+		name           string
+		originalTime   time.Time
+		normalizedTime time.Time
+	}{
+		{
+			name:           "9:00:01 触发应标准化为 9:00:00（< 30秒，保持当前分钟）",
+			originalTime:   time.Date(2025, 6, 7, 9, 0, 1, 0, bjtZone),
+			normalizedTime: time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+		},
+		{
+			name:           "9:00:29 触发应标准化为 9:00:00（< 30秒，保持当前分钟）",
+			originalTime:   time.Date(2025, 6, 7, 9, 0, 29, 0, bjtZone),
+			normalizedTime: time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+		},
+		{
+			name:           "9:00:30 触发应标准化为 9:01:00（= 30秒，进位到下一分钟）",
+			originalTime:   time.Date(2025, 6, 7, 9, 0, 30, 0, bjtZone),
+			normalizedTime: time.Date(2025, 6, 7, 9, 1, 0, 0, bjtZone),
+		},
+		{
+			name:           "9:00:59 触发应标准化为 9:01:00（>= 30秒，进位到下一分钟）",
+			originalTime:   time.Date(2025, 6, 7, 9, 0, 59, 0, bjtZone),
+			normalizedTime: time.Date(2025, 6, 7, 9, 1, 0, 0, bjtZone),
+		},
+		{
+			name:           "8:59:29 触发应标准化为 8:59:00（< 30秒，保持当前分钟）",
+			originalTime:   time.Date(2025, 6, 7, 8, 59, 29, 0, bjtZone),
+			normalizedTime: time.Date(2025, 6, 7, 8, 59, 0, 0, bjtZone),
+		},
+		{
+			name:           "8:59:30 触发应标准化为 9:00:00（>= 30秒，进位到下一分钟）",
+			originalTime:   time.Date(2025, 6, 7, 8, 59, 30, 0, bjtZone),
+			normalizedTime: time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+		},
+		{
+			name:           "9:00:00 触发应保持 9:00:00",
+			originalTime:   time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			normalizedTime: time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// 模拟 execute 方法中的标准化逻辑（四舍五入到整分钟）
+			now := tt.originalTime
+			minute := now.Minute()
+			hour := now.Hour()
+
+			if now.Second() >= 30 {
+				// 进位到下一分钟
+				now = now.Add(time.Minute)
+				minute = now.Minute()
+				hour = now.Hour()
+			}
+
+			normalized := time.Date(
+				now.Year(),
+				now.Month(),
+				now.Day(),
+				hour,
+				minute,
+				0, 0,
+				now.Location(),
+			)
+
+			if !normalized.Equal(tt.normalizedTime) {
+				t.Errorf("标准化时间 = %v, 期望 %v", normalized.Format("2006-01-02 15:04:05"), tt.normalizedTime.Format("2006-01-02 15:04:05"))
+			}
+		})
+	}
+}
+
+// TestCountdownWithTimeNormalization 测试标准化时间后的倒计时显示（基于北京时间 UTC+8）
+func TestCountdownWithTimeNormalization(t *testing.T) {
+	bjtZone := time.FixedZone("BJT", 8*3600) // UTC+8
+
+	tests := []struct {
+		name            string
+		triggerTime     time.Time // 实际触发时间
+		examDate        time.Time // 考试时间
+		wantContains    string    // 期望倒计时包含的内容
+		wantNotContains string    // 不应该包含的内容（如 "59分钟59秒"）
+	}{
+		{
+			name:            "9:00:01 触发，距离考试4天，应显示4天而不是3天23小时59分59秒",
+			triggerTime:     time.Date(2025, 6, 3, 9, 0, 1, 0, bjtZone),
+			examDate:        time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			wantContains:    "4天",
+			wantNotContains: "59",
+		},
+		{
+			name:            "8:59:59 触发，标准化为 9:00:00，距离考试刚好5天",
+			triggerTime:     time.Date(2025, 6, 2, 8, 59, 59, 0, bjtZone),
+			examDate:        time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			wantContains:    "5天",
+			wantNotContains: "小时",
+		},
+		{
+			name:            "9:00:00 触发，距离考试刚好4天，应显示4天",
+			triggerTime:     time.Date(2025, 6, 3, 9, 0, 0, 0, bjtZone),
+			examDate:        time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			wantContains:    "4天",
+			wantNotContains: "小时",
+		},
+		{
+			name:            "10:30:45 触发，标准化为 10:31:00，距离考试3天22小时29分钟",
+			triggerTime:     time.Date(2025, 6, 3, 10, 30, 45, 123456789, bjtZone),
+			examDate:        time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			wantContains:    "3天22小时29分钟",
+			wantNotContains: "秒",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// 模拟 execute 方法中的时间标准化（四舍五入到整分钟）
+			now := tt.triggerTime
+			minute := now.Minute()
+			hour := now.Hour()
+
+			if now.Second() >= 30 {
+				// 进位到下一分钟
+				now = now.Add(time.Minute)
+				minute = now.Minute()
+				hour = now.Hour()
+			}
+
+			normalized := time.Date(
+				now.Year(),
+				now.Month(),
+				now.Day(),
+				hour,
+				minute,
+				0, 0,
+				now.Location(),
+			)
+
+			// 计算倒计时
+			duration := tt.examDate.Sub(normalized)
+
+			totalSeconds := int64(duration.Seconds())
+			days := totalSeconds / 86400
+			hours := (totalSeconds % 86400) / 3600
+			minutes := (totalSeconds % 3600) / 60
+			seconds := totalSeconds % 60
+
+			var result string
+			if days > 0 {
+				if hours > 0 && minutes > 0 {
+					result = formatString("%d天%d小时%d分钟", days, hours, minutes)
+				} else if hours > 0 {
+					result = formatString("%d天%d小时", days, hours)
+				} else if minutes > 0 {
+					result = formatString("%d天%d分钟", days, minutes)
+				} else {
+					result = formatString("%d天", days)
+				}
+			} else if hours > 0 {
+				if minutes > 0 {
+					result = formatString("%d小时%d分钟", hours, minutes)
+				} else {
+					result = formatString("%d小时", hours)
+				}
+			} else if minutes > 0 {
+				if seconds > 0 {
+					result = formatString("%d分钟%d秒", minutes, seconds)
+				} else {
+					result = formatString("%d分钟", minutes)
+				}
+			} else {
+				result = formatString("%d秒", seconds)
+			}
+
+			t.Logf("原始触发时间: %v", tt.triggerTime.Format("2006-01-02 15:04:05 MST"))
+			t.Logf("标准化时间: %v", normalized.Format("2006-01-02 15:04:05 MST"))
+			t.Logf("倒计时结果: %s", result)
+
+			if !containsString(result, tt.wantContains) {
+				t.Errorf("倒计时 = %v, 应该包含 %v", result, tt.wantContains)
+			}
+
+			if tt.wantNotContains != "" && containsString(result, tt.wantNotContains) {
+				t.Errorf("倒计时 = %v, 不应该包含 %v", result, tt.wantNotContains)
+			}
+		})
+	}
+}
+
+// formatString 简单的格式化字符串函数
+func formatString(format string, args ...int64) string {
+	result := format
+	for _, arg := range args {
+		// 简单替换 %d
+		for i := 0; i < len(result)-1; i++ {
+			if result[i] == '%' && result[i+1] == 'd' {
+				numStr := ""
+				num := arg
+				if num == 0 {
+					numStr = "0"
+				} else {
+					for num > 0 {
+						numStr = string(rune('0'+num%10)) + numStr
+						num /= 10
+					}
+				}
+				result = result[:i] + numStr + result[i+2:]
+				break
+			}
+		}
+	}
+	return result
+}
+
+// containsString 检查字符串是否包含子串
+func containsString(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && findSubstring(s, substr))
+}
+
+func findSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
