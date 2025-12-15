@@ -6,7 +6,7 @@ import (
 )
 
 // Version 应用版本号，通过 ldflags 注入
-var Version = "10.0.4"
+var Version = "10.0.5"
 
 // BuildTime 构建时间，通过 ldflags 注入
 var BuildTime = "unknown"
