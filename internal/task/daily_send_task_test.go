@@ -1,10 +1,12 @@
 package task
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/herbertgao/gaokao_bot/internal/model"
+	"github.com/herbertgao/gaokao_bot/internal/util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -92,6 +94,18 @@ func TestDailySendTask_ShouldSend(t *testing.T) {
 			examDate:    time.Date(2025, 6, 8, 10, 0, 0, 0, time.UTC),
 			currentTime: time.Date(2025, 6, 7, 9, 59, 0, 0, time.UTC), // 略超过24小时
 			want:        false,
+		},
+		{
+			name:        "超过24小时，9:00:35应该发送（Bug修复：时间标准化不影响判断）",
+			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, time.UTC),
+			currentTime: time.Date(2025, 6, 7, 9, 0, 35, 0, time.UTC), // 9:00:35，秒>=30会标准化为9:01
+			want:        true, // 应该发送，因为 shouldSend 使用原始时间判断
+		},
+		{
+			name:        "超过24小时，9:00:59应该发送（Bug修复：时间标准化不影响判断）",
+			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, time.UTC),
+			currentTime: time.Date(2025, 6, 7, 9, 0, 59, 0, time.UTC), // 9:00:59，秒>=30会标准化为9:01
+			want:        true, // 应该发送，因为 shouldSend 使用原始时间判断
 		},
 	}
 
@@ -206,26 +220,12 @@ func TestTimeNormalization(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// 模拟 execute 方法中的标准化逻辑（四舍五入到整分钟）
-			now := tt.originalTime
-			minute := now.Minute()
-			hour := now.Hour()
-
-			if now.Second() >= 30 {
-				// 进位到下一分钟
-				now = now.Add(time.Minute)
-				minute = now.Minute()
-				hour = now.Hour()
+			normalized := tt.originalTime
+			if normalized.Second() >= 30 {
+				normalized = normalized.Add(time.Minute)
 			}
-
-			normalized := time.Date(
-				now.Year(),
-				now.Month(),
-				now.Day(),
-				hour,
-				minute,
-				0, 0,
-				now.Location(),
-			)
+			// 截断到整分钟
+			normalized = time.Date(normalized.Year(), normalized.Month(), normalized.Day(), normalized.Hour(), normalized.Minute(), 0, 0, normalized.Location())
 
 			if !normalized.Equal(tt.normalizedTime) {
 				t.Errorf("标准化时间 = %v, 期望 %v", normalized.Format("2006-01-02 15:04:05"), tt.normalizedTime.Format("2006-01-02 15:04:05"))
@@ -278,113 +278,28 @@ func TestCountdownWithTimeNormalization(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// 模拟 execute 方法中的时间标准化（四舍五入到整分钟）
-			now := tt.triggerTime
-			minute := now.Minute()
-			hour := now.Hour()
-
-			if now.Second() >= 30 {
-				// 进位到下一分钟
-				now = now.Add(time.Minute)
-				minute = now.Minute()
-				hour = now.Hour()
+			normalized := tt.triggerTime
+			if normalized.Second() >= 30 {
+				normalized = normalized.Add(time.Minute)
 			}
+			// 截断到整分钟
+			normalized = time.Date(normalized.Year(), normalized.Month(), normalized.Day(), normalized.Hour(), normalized.Minute(), 0, 0, normalized.Location())
 
-			normalized := time.Date(
-				now.Year(),
-				now.Month(),
-				now.Day(),
-				hour,
-				minute,
-				0, 0,
-				now.Location(),
-			)
-
-			// 计算倒计时
+			// 使用 util.FormatDuration 计算倒计时（与生产代码一致）
 			duration := tt.examDate.Sub(normalized)
-
-			totalSeconds := int64(duration.Seconds())
-			days := totalSeconds / 86400
-			hours := (totalSeconds % 86400) / 3600
-			minutes := (totalSeconds % 3600) / 60
-			seconds := totalSeconds % 60
-
-			var result string
-			if days > 0 {
-				if hours > 0 && minutes > 0 {
-					result = formatString("%d天%d小时%d分钟", days, hours, minutes)
-				} else if hours > 0 {
-					result = formatString("%d天%d小时", days, hours)
-				} else if minutes > 0 {
-					result = formatString("%d天%d分钟", days, minutes)
-				} else {
-					result = formatString("%d天", days)
-				}
-			} else if hours > 0 {
-				if minutes > 0 {
-					result = formatString("%d小时%d分钟", hours, minutes)
-				} else {
-					result = formatString("%d小时", hours)
-				}
-			} else if minutes > 0 {
-				if seconds > 0 {
-					result = formatString("%d分钟%d秒", minutes, seconds)
-				} else {
-					result = formatString("%d分钟", minutes)
-				}
-			} else {
-				result = formatString("%d秒", seconds)
-			}
+			result := util.FormatDuration(duration)
 
 			t.Logf("原始触发时间: %v", tt.triggerTime.Format("2006-01-02 15:04:05 MST"))
 			t.Logf("标准化时间: %v", normalized.Format("2006-01-02 15:04:05 MST"))
 			t.Logf("倒计时结果: %s", result)
 
-			if !containsString(result, tt.wantContains) {
+			if !strings.Contains(result, tt.wantContains) {
 				t.Errorf("倒计时 = %v, 应该包含 %v", result, tt.wantContains)
 			}
 
-			if tt.wantNotContains != "" && containsString(result, tt.wantNotContains) {
+			if tt.wantNotContains != "" && strings.Contains(result, tt.wantNotContains) {
 				t.Errorf("倒计时 = %v, 不应该包含 %v", result, tt.wantNotContains)
 			}
 		})
 	}
-}
-
-// formatString 简单的格式化字符串函数
-func formatString(format string, args ...int64) string {
-	result := format
-	for _, arg := range args {
-		// 简单替换 %d
-		for i := 0; i < len(result)-1; i++ {
-			if result[i] == '%' && result[i+1] == 'd' {
-				numStr := ""
-				num := arg
-				if num == 0 {
-					numStr = "0"
-				} else {
-					for num > 0 {
-						numStr = string(rune('0'+num%10)) + numStr
-						num /= 10
-					}
-				}
-				result = result[:i] + numStr + result[i+2:]
-				break
-			}
-		}
-	}
-	return result
-}
-
-// containsString 检查字符串是否包含子串
-func containsString(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && findSubstring(s, substr))
-}
-
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

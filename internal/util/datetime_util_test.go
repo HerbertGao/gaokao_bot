@@ -34,27 +34,27 @@ func TestFormatDuration(t *testing.T) {
 		{
 			name:     "只有分",
 			duration: 3 * time.Minute,
-			expected: "3分",
+			expected: "3分钟",
 		},
 		{
 			name:     "分秒",
 			duration: 3*time.Minute + 25*time.Second,
-			expected: "3分25秒",
+			expected: "3分钟25秒",
 		},
 		{
 			name:     "小时分秒",
 			duration: 2*time.Hour + 15*time.Minute + 30*time.Second,
-			expected: "2小时15分30秒",
+			expected: "2小时15分钟30秒",
 		},
 		{
 			name:     "天小时分秒",
 			duration: 350*24*time.Hour + 23*time.Hour + 59*time.Minute + 59*time.Second,
-			expected: "350天23小时59分59秒",
+			expected: "350天23小时59分钟59秒",
 		},
 		{
 			name:     "只有天和分",
 			duration: 18*24*time.Hour + 3*time.Minute,
-			expected: "18天3分",
+			expected: "18天3分钟",
 		},
 		{
 			name:     "只有小时",
@@ -102,22 +102,22 @@ func TestFormatDurationWithMillis(t *testing.T) {
 		{
 			name:     "分秒毫秒",
 			duration: 3*time.Minute + 25*time.Second + 678*time.Millisecond,
-			expected: "3分25秒678毫秒",
+			expected: "3分钟25秒678毫秒",
 		},
 		{
 			name:     "小时分秒毫秒",
 			duration: 2*time.Hour + 15*time.Minute + 30*time.Second + 999*time.Millisecond,
-			expected: "2小时15分30秒999毫秒",
+			expected: "2小时15分钟30秒999毫秒",
 		},
 		{
 			name:     "天小时分秒毫秒",
 			duration: 350*24*time.Hour + 23*time.Hour + 59*time.Minute + 59*time.Second + 500*time.Millisecond,
-			expected: "350天23小时59分59秒500毫秒",
+			expected: "350天23小时59分钟59秒500毫秒",
 		},
 		{
 			name:     "只有天和分和毫秒",
 			duration: 18*24*time.Hour + 3*time.Minute + 200*time.Millisecond,
-			expected: "18天3分200毫秒",
+			expected: "18天3分钟200毫秒",
 		},
 		{
 			name:     "只有小时（无毫秒）",

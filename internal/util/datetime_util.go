@@ -12,8 +12,8 @@ func FormatNormal(t time.Time) string {
 }
 
 // FormatDuration 格式化时间间隔为中文描述
-// 格式：天时分秒，如果某项为0则不显示
-// 例如：350天23小时59分59秒、18天3分
+// 格式：天时分钟秒，如果某项为0则不显示
+// 例如：350天23小时59分钟59秒、18天3分钟
 //
 // 注意：如果总时长小于1秒但大于0，会显示为"1秒"
 func FormatDuration(d time.Duration) string {
@@ -49,7 +49,7 @@ func FormatDuration(d time.Duration) string {
 		result.WriteString(fmt.Sprintf("%d小时", hours))
 	}
 	if minutes > 0 {
-		result.WriteString(fmt.Sprintf("%d分", minutes))
+		result.WriteString(fmt.Sprintf("%d分钟", minutes))
 	}
 	if seconds > 0 || result.Len() == 0 {
 		result.WriteString(fmt.Sprintf("%d秒", seconds))
@@ -59,8 +59,8 @@ func FormatDuration(d time.Duration) string {
 }
 
 // FormatDurationWithMillis 格式化时间间隔为中文描述（精确到毫秒）
-// 格式：天时分秒毫秒，如果某项为0则不显示
-// 例如：350天23小时59分59秒500毫秒、18天3分200毫秒
+// 格式：天时分钟秒毫秒，如果某项为0则不显示
+// 例如：350天23小时59分钟59秒500毫秒、18天3分钟200毫秒
 func FormatDurationWithMillis(d time.Duration) string {
 	// 如果为负数，返回 0秒
 	if d < 0 {
@@ -90,7 +90,7 @@ func FormatDurationWithMillis(d time.Duration) string {
 		result.WriteString(fmt.Sprintf("%d小时", hours))
 	}
 	if minutes > 0 {
-		result.WriteString(fmt.Sprintf("%d分", minutes))
+		result.WriteString(fmt.Sprintf("%d分钟", minutes))
 	}
 	if seconds > 0 {
 		result.WriteString(fmt.Sprintf("%d秒", seconds))

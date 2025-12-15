@@ -67,21 +67,8 @@ func (t *DailySendTask) Stop() {
 
 // execute 执行任务
 func (t *DailySendTask) execute() {
-	// 定时任务一般设置在整点，可能有±1分钟以内的误差
-	// 将时间标准化为最近的整分钟，防止出现"还剩3天23小时59分钟59秒"或"还剩4天1秒"的情况
-	// 四舍五入：秒 >= 30 则进位到下一分钟，< 30 则保持当前分钟
+	// 获取当前时间（用于判断是否发送）
 	now := time.Now()
-	minute := now.Minute()
-	hour := now.Hour()
-
-	if now.Second() >= 30 {
-		// 进位到下一分钟
-		now = now.Add(time.Minute)
-		minute = now.Minute()
-		hour = now.Hour()
-	}
-
-	now = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
 
 	// 获取符合条件的考试
 	exams, err := t.examDateService.GetExamsInRange(now)
@@ -111,8 +98,17 @@ func (t *DailySendTask) execute() {
 			templateContent = template.TemplateContent
 		}
 
-		// 生成倒计时消息
-		message := util.GetCountDownString(&exam, templateContent, now)
+		// 时间标准化：仅用于倒计时显示，防止出现"3天23小时59分59秒"等情况
+		// 四舍五入到最近的整分钟：秒 >= 30 进位，< 30 保持
+		normalizedNow := now
+		if normalizedNow.Second() >= 30 {
+			normalizedNow = normalizedNow.Add(time.Minute)
+		}
+		// 截断到整分钟
+		normalizedNow = time.Date(normalizedNow.Year(), normalizedNow.Month(), normalizedNow.Day(), normalizedNow.Hour(), normalizedNow.Minute(), 0, 0, normalizedNow.Location())
+
+		// 生成倒计时消息（使用标准化后的时间）
+		message := util.GetCountDownString(&exam, templateContent, normalizedNow)
 
 		// 获取发送目标
 		chats, err := t.sendChatService.GetAll()

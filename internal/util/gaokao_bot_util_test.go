@@ -244,13 +244,13 @@ func TestGetCountDownString(t *testing.T) {
 		{
 			name:           "考试前30分钟",
 			now:            exam.ExamBeginDate.Add(-30 * time.Minute),
-			expectedResult: "30分",
+			expectedResult: "30分钟",
 			checkContains:  true,
 		},
 		{
 			name:           "考试前5分钟",
 			now:            exam.ExamBeginDate.Add(-5 * time.Minute),
-			expectedResult: "5分",
+			expectedResult: "5分钟",
 			checkContains:  true,
 		},
 		{
@@ -341,21 +341,21 @@ func TestGetCountDownTime(t *testing.T) {
 			checkContains:  true,
 		},
 		{
-			name:           "考试前1天2小时3分4秒",
+			name:           "考试前1天2小时3分钟4秒",
 			now:            exam.ExamBeginDate.Add(-26*time.Hour - 3*time.Minute - 4*time.Second),
-			expectedResult: "1天2小时3分4秒",
+			expectedResult: "1天2小时3分钟4秒",
 			checkContains:  false,
 		},
 		{
-			name:           "考试前5小时30分",
+			name:           "考试前5小时30分钟",
 			now:            exam.ExamBeginDate.Add(-5*time.Hour - 30*time.Minute),
-			expectedResult: "5小时30分",
+			expectedResult: "5小时30分钟",
 			checkContains:  true,
 		},
 		{
-			name:           "考试前1分30秒",
+			name:           "考试前1分钟30秒",
 			now:            exam.ExamBeginDate.Add(-1*time.Minute - 30*time.Second),
-			expectedResult: "1分30秒",
+			expectedResult: "1分钟30秒",
 			checkContains:  false,
 		},
 		{
