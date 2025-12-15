@@ -5,6 +5,73 @@ import (
 	"time"
 )
 
+func TestNormalizeToMinute(t *testing.T) {
+	bjtZone := time.FixedZone("BJT", 8*3600) // UTC+8
+
+	tests := []struct {
+		name     string
+		input    time.Time
+		expected time.Time
+	}{
+		{
+			name:     "秒数<30，保持当前分钟",
+			input:    time.Date(2025, 6, 7, 9, 15, 29, 0, bjtZone),
+			expected: time.Date(2025, 6, 7, 9, 15, 0, 0, bjtZone),
+		},
+		{
+			name:     "秒数=30，进位到下一分钟",
+			input:    time.Date(2025, 6, 7, 9, 15, 30, 0, bjtZone),
+			expected: time.Date(2025, 6, 7, 9, 16, 0, 0, bjtZone),
+		},
+		{
+			name:     "秒数>30，进位到下一分钟",
+			input:    time.Date(2025, 6, 7, 9, 15, 45, 0, bjtZone),
+			expected: time.Date(2025, 6, 7, 9, 16, 0, 0, bjtZone),
+		},
+		{
+			name:     "59秒进位到下一分钟",
+			input:    time.Date(2025, 6, 7, 9, 15, 59, 0, bjtZone),
+			expected: time.Date(2025, 6, 7, 9, 16, 0, 0, bjtZone),
+		},
+		{
+			name:     "8:59:30进位到9:00",
+			input:    time.Date(2025, 6, 7, 8, 59, 30, 0, bjtZone),
+			expected: time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+		},
+		{
+			name:     "整分钟保持不变",
+			input:    time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			expected: time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+		},
+		{
+			name:     "带纳秒的时间也会被截断",
+			input:    time.Date(2025, 6, 7, 9, 15, 10, 500000000, bjtZone),
+			expected: time.Date(2025, 6, 7, 9, 15, 0, 0, bjtZone),
+		},
+		{
+			name:     "23:59:59跨日边界，进位到次日00:00",
+			input:    time.Date(2025, 6, 6, 23, 59, 59, 0, bjtZone),
+			expected: time.Date(2025, 6, 7, 0, 0, 0, 0, bjtZone),
+		},
+		{
+			name:     "23:59:30跨日边界，进位到次日00:00",
+			input:    time.Date(2025, 6, 6, 23, 59, 30, 0, bjtZone),
+			expected: time.Date(2025, 6, 7, 0, 0, 0, 0, bjtZone),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := NormalizeToMinute(tt.input)
+			if !result.Equal(tt.expected) {
+				t.Errorf("NormalizeToMinute() = %v, want %v",
+					result.Format("2006-01-02 15:04:05.000"),
+					tt.expected.Format("2006-01-02 15:04:05.000"))
+			}
+		})
+	}
+}
+
 func TestFormatDuration(t *testing.T) {
 	tests := []struct {
 		name     string

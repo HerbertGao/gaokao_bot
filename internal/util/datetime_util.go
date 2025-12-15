@@ -11,6 +11,17 @@ func FormatNormal(t time.Time) string {
 	return t.Format("2006-01-02 15:04:05")
 }
 
+// NormalizeToMinute 标准化时间到最近的整分钟
+// 四舍五入：秒 >= 30 进位到下一分钟，< 30 保持当前分钟
+// 用于定时任务的倒计时显示，避免出现"3天23小时59分钟59秒"等情况
+func NormalizeToMinute(t time.Time) time.Time {
+	if t.Second() >= 30 {
+		t = t.Add(time.Minute)
+	}
+	// 截断到整分钟
+	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location())
+}
+
 // FormatDuration 格式化时间间隔为中文描述
 // 格式：天时分钟秒，如果某项为0则不显示
 // 例如：350天23小时59分钟59秒、18天3分钟

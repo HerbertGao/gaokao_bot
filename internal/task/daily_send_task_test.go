@@ -219,13 +219,8 @@ func TestTimeNormalization(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 模拟 execute 方法中的标准化逻辑（四舍五入到整分钟）
-			normalized := tt.originalTime
-			if normalized.Second() >= 30 {
-				normalized = normalized.Add(time.Minute)
-			}
-			// 截断到整分钟
-			normalized = time.Date(normalized.Year(), normalized.Month(), normalized.Day(), normalized.Hour(), normalized.Minute(), 0, 0, normalized.Location())
+			// 使用 util.NormalizeToMinute
+			normalized := util.NormalizeToMinute(tt.originalTime)
 
 			if !normalized.Equal(tt.normalizedTime) {
 				t.Errorf("标准化时间 = %v, 期望 %v", normalized.Format("2006-01-02 15:04:05"), tt.normalizedTime.Format("2006-01-02 15:04:05"))
@@ -277,13 +272,8 @@ func TestCountdownWithTimeNormalization(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 模拟 execute 方法中的时间标准化（四舍五入到整分钟）
-			normalized := tt.triggerTime
-			if normalized.Second() >= 30 {
-				normalized = normalized.Add(time.Minute)
-			}
-			// 截断到整分钟
-			normalized = time.Date(normalized.Year(), normalized.Month(), normalized.Day(), normalized.Hour(), normalized.Minute(), 0, 0, normalized.Location())
+			// 使用 util.NormalizeToMinute（与生产代码一致）
+			normalized := util.NormalizeToMinute(tt.triggerTime)
 
 			// 使用 util.FormatDuration 计算倒计时（与生产代码一致）
 			duration := tt.examDate.Sub(normalized)

@@ -99,13 +99,7 @@ func (t *DailySendTask) execute() {
 		}
 
 		// 时间标准化：仅用于倒计时显示，防止出现"3天23小时59分59秒"等情况
-		// 四舍五入到最近的整分钟：秒 >= 30 进位，< 30 保持
-		normalizedNow := now
-		if normalizedNow.Second() >= 30 {
-			normalizedNow = normalizedNow.Add(time.Minute)
-		}
-		// 截断到整分钟
-		normalizedNow = time.Date(normalizedNow.Year(), normalizedNow.Month(), normalizedNow.Day(), normalizedNow.Hour(), normalizedNow.Minute(), 0, 0, normalizedNow.Location())
+		normalizedNow := util.NormalizeToMinute(now)
 
 		// 生成倒计时消息（使用标准化后的时间）
 		message := util.GetCountDownString(&exam, templateContent, normalizedNow)
