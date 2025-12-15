@@ -34,6 +34,39 @@ check_uncommitted_changes() {
     fi
 }
 
+# 检查当前分支是否为 master
+check_master_branch() {
+    local current_branch=$(git branch --show-current)
+    if [ "$current_branch" != "master" ]; then
+        echo -e "${RED}错误: 只能在 master 分支打标签${NC}"
+        echo -e "${YELLOW}当前分支: ${current_branch}${NC}"
+        echo -e "${YELLOW}请先切换到 master 分支${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ 当前在 master 分支${NC}"
+}
+
+# 更新到最新代码
+update_to_latest() {
+    echo -e "${BLUE}更新到最新代码...${NC}"
+
+    # 获取远程更新
+    git fetch origin master
+
+    # 检查本地是否落后于远程
+    local local_commit=$(git rev-parse master)
+    local remote_commit=$(git rev-parse origin/master)
+
+    if [ "$local_commit" != "$remote_commit" ]; then
+        echo -e "${YELLOW}本地代码不是最新的${NC}"
+        echo -e "${BLUE}拉取最新代码...${NC}"
+        git pull origin master
+        echo -e "${GREEN}✓ 已更新到最新代码${NC}"
+    else
+        echo -e "${GREEN}✓ 本地代码已是最新${NC}"
+    fi
+}
+
 # 运行测试
 run_tests() {
     echo -e "${BLUE}运行测试...${NC}"
@@ -132,6 +165,8 @@ main() {
     echo -e "${BLUE}开始发布流程...${NC}"
 
     check_git_repo
+    check_master_branch
+    update_to_latest
     check_uncommitted_changes
 
     echo -e "${BLUE}更新版本...${NC}"
