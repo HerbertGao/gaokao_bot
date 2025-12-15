@@ -11,10 +11,10 @@ import (
 // createTestExam 创建测试用的考试数据（匹配数据库真实数据）
 func createTestExam() *model.ExamDate {
 	// 2026年6月7日9:00 - 6月10日17:00（匹配实际数据库）
-	examBeginDate := time.Date(2026, 6, 7, 9, 0, 0, 0, time.UTC)
-	examEndDate := time.Date(2026, 6, 10, 17, 0, 0, 0, time.UTC)
-	yearBeginDate := time.Date(2025, 6, 10, 17, 0, 0, 0, time.UTC)
-	yearEndDate := time.Date(2026, 6, 10, 17, 0, 0, 0, time.UTC)
+	examBeginDate := time.Date(2026, 6, 7, 9, 0, 0, 0, GetBJTLocation())
+	examEndDate := time.Date(2026, 6, 10, 17, 0, 0, 0, GetBJTLocation())
+	yearBeginDate := time.Date(2025, 6, 10, 17, 0, 0, 0, GetBJTLocation())
+	yearEndDate := time.Date(2026, 6, 10, 17, 0, 0, 0, GetBJTLocation())
 
 	return &model.ExamDate{
 		ID:                9,
@@ -116,12 +116,12 @@ func TestIsExamTime(t *testing.T) {
 		},
 		{
 			name:     "考试进行中（第一天下午）",
-			now:      time.Date(2026, 6, 7, 15, 30, 0, 0, time.UTC),
+			now:      time.Date(2026, 6, 7, 15, 30, 0, 0, GetBJTLocation()),
 			expected: true,
 		},
 		{
 			name:     "考试进行中（第二天）",
-			now:      time.Date(2026, 6, 8, 10, 0, 0, 0, time.UTC),
+			now:      time.Date(2026, 6, 8, 10, 0, 0, 0, GetBJTLocation()),
 			expected: true,
 		},
 		{
@@ -291,7 +291,7 @@ func TestGetCountDownString(t *testing.T) {
 		},
 		{
 			name:           "考试进行中（第二天）",
-			now:            time.Date(2026, 6, 8, 10, 0, 0, 0, time.UTC),
+			now:            time.Date(2026, 6, 8, 10, 0, 0, 0, GetBJTLocation()),
 			expectedResult: "2026年普通高等学校招生全国统一考试正在进行中！",
 			checkContains:  false,
 		},
@@ -413,7 +413,7 @@ func TestCountDownScenarios(t *testing.T) {
 
 	t.Run("完整倒计时场景", func(t *testing.T) {
 		// 2025年6月11日（考试前约362天）
-		now := time.Date(2025, 6, 11, 9, 0, 0, 0, time.UTC)
+		now := time.Date(2025, 6, 11, 9, 0, 0, 0, GetBJTLocation())
 		result := GetCountDownString(exam, template, now)
 		t.Logf("考试前约362天: %s", result)
 
@@ -457,7 +457,7 @@ func TestCountDownScenarios(t *testing.T) {
 
 	t.Run("考试第二天", func(t *testing.T) {
 		// 第二天上午
-		now := time.Date(2026, 6, 8, 10, 0, 0, 0, time.UTC)
+		now := time.Date(2026, 6, 8, 10, 0, 0, 0, GetBJTLocation())
 		result := GetCountDownString(exam, template, now)
 		t.Logf("考试第二天: %s", result)
 

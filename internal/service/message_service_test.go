@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/herbertgao/gaokao_bot/internal/util"
 	"github.com/herbertgao/gaokao_bot/internal/model"
 	"github.com/herbertgao/gaokao_bot/internal/repository"
 	"github.com/mymmrac/telego"
@@ -87,10 +88,10 @@ func TestMessageService_GetCountDownMessage_WithYear(t *testing.T) {
 		ExamYear:          year,
 		ExamDesc:          "2026年高考",
 		ShortDesc:         "高考",
-		ExamBeginDate:     time.Date(year, 6, 7, 9, 0, 0, 0, time.UTC),
-		ExamEndDate:       time.Date(year, 6, 10, 17, 0, 0, 0, time.UTC),
-		ExamYearBeginDate: time.Date(year-1, 6, 10, 17, 0, 0, 0, time.UTC),
-		ExamYearEndDate:   time.Date(year, 6, 10, 17, 0, 0, 0, time.UTC),
+		ExamBeginDate:     time.Date(year, 6, 7, 9, 0, 0, 0, util.GetBJTLocation()),
+		ExamEndDate:       time.Date(year, 6, 10, 17, 0, 0, 0, util.GetBJTLocation()),
+		ExamYearBeginDate: time.Date(year-1, 6, 10, 17, 0, 0, 0, util.GetBJTLocation()),
+		ExamYearEndDate:   time.Date(year, 6, 10, 17, 0, 0, 0, util.GetBJTLocation()),
 		IsDelete:          false,
 	})
 

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/herbertgao/gaokao_bot/internal/model"
+	"github.com/herbertgao/gaokao_bot/internal/util"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -89,6 +90,7 @@ func TestExamDateRepository_GetExamByYear(t *testing.T) {
 	repo := NewExamDateRepository(db)
 
 	year := 2026
+	bjtZone := util.GetBJTLocation()
 
 	// 插入指定年份的考试
 	db.Create(&model.ExamDate{
@@ -96,10 +98,10 @@ func TestExamDateRepository_GetExamByYear(t *testing.T) {
 		ExamYear:          year,
 		ExamDesc:          "2026年考试",
 		ShortDesc:         "考试",
-		ExamBeginDate:     time.Date(year, 6, 7, 9, 0, 0, 0, time.UTC),
-		ExamEndDate:       time.Date(year, 6, 10, 17, 0, 0, 0, time.UTC),
-		ExamYearBeginDate: time.Date(year-1, 6, 10, 17, 0, 0, 0, time.UTC),
-		ExamYearEndDate:   time.Date(year, 6, 10, 17, 0, 0, 0, time.UTC),
+		ExamBeginDate:     time.Date(year, 6, 7, 9, 0, 0, 0, bjtZone),
+		ExamEndDate:       time.Date(year, 6, 10, 17, 0, 0, 0, bjtZone),
+		ExamYearBeginDate: time.Date(year-1, 6, 10, 17, 0, 0, 0, bjtZone),
+		ExamYearEndDate:   time.Date(year, 6, 10, 17, 0, 0, 0, bjtZone),
 		IsDelete:          false,
 	})
 
@@ -109,10 +111,10 @@ func TestExamDateRepository_GetExamByYear(t *testing.T) {
 		ExamYear:          year + 1,
 		ExamDesc:          "2027年考试",
 		ShortDesc:         "考试",
-		ExamBeginDate:     time.Date(year+1, 6, 7, 9, 0, 0, 0, time.UTC),
-		ExamEndDate:       time.Date(year+1, 6, 10, 17, 0, 0, 0, time.UTC),
-		ExamYearBeginDate: time.Date(year, 6, 10, 17, 0, 0, 0, time.UTC),
-		ExamYearEndDate:   time.Date(year+1, 6, 10, 17, 0, 0, 0, time.UTC),
+		ExamBeginDate:     time.Date(year+1, 6, 7, 9, 0, 0, 0, bjtZone),
+		ExamEndDate:       time.Date(year+1, 6, 10, 17, 0, 0, 0, bjtZone),
+		ExamYearBeginDate: time.Date(year, 6, 10, 17, 0, 0, 0, bjtZone),
+		ExamYearEndDate:   time.Date(year+1, 6, 10, 17, 0, 0, 0, bjtZone),
 		IsDelete:          false,
 	})
 
@@ -122,10 +124,10 @@ func TestExamDateRepository_GetExamByYear(t *testing.T) {
 		ExamYear:          year,
 		ExamDesc:          "已删除的2026年考试",
 		ShortDesc:         "考试",
-		ExamBeginDate:     time.Date(year, 6, 7, 9, 0, 0, 0, time.UTC),
-		ExamEndDate:       time.Date(year, 6, 10, 17, 0, 0, 0, time.UTC),
-		ExamYearBeginDate: time.Date(year-1, 6, 10, 17, 0, 0, 0, time.UTC),
-		ExamYearEndDate:   time.Date(year, 6, 10, 17, 0, 0, 0, time.UTC),
+		ExamBeginDate:     time.Date(year, 6, 7, 9, 0, 0, 0, bjtZone),
+		ExamEndDate:       time.Date(year, 6, 10, 17, 0, 0, 0, bjtZone),
+		ExamYearBeginDate: time.Date(year-1, 6, 10, 17, 0, 0, 0, bjtZone),
+		ExamYearEndDate:   time.Date(year, 6, 10, 17, 0, 0, 0, bjtZone),
 		IsDelete:          true,
 	})
 
