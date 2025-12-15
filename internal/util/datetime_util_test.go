@@ -6,7 +6,7 @@ import (
 )
 
 func TestNormalizeToMinute(t *testing.T) {
-	bjtZone := time.FixedZone("BJT", 8*3600) // UTC+8
+	bjtZone := GetBJTLocation()
 
 	tests := []struct {
 		name     string

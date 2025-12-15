@@ -182,7 +182,7 @@ func TestDailySendTask_StartAndStop(t *testing.T) {
 // 将时间标准化为最近的整分钟（基于北京时间 UTC+8）
 // 四舍五入：秒 >= 30 进位到下一分钟，< 30 保持当前分钟
 func TestTimeNormalization(t *testing.T) {
-	bjtZone := time.FixedZone("BJT", 8*3600) // UTC+8
+	bjtZone := util.GetBJTLocation()
 
 	tests := []struct {
 		name           string
@@ -240,7 +240,7 @@ func TestTimeNormalization(t *testing.T) {
 
 // TestCountdownWithTimeNormalization 测试标准化时间后的倒计时显示（基于北京时间 UTC+8）
 func TestCountdownWithTimeNormalization(t *testing.T) {
-	bjtZone := time.FixedZone("BJT", 8*3600) // UTC+8
+	bjtZone := util.GetBJTLocation()
 
 	tests := []struct {
 		name            string
