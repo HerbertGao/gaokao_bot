@@ -11,9 +11,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/herbertgao/gaokao_bot/internal/util"
 )
 
 const (
@@ -123,7 +123,7 @@ func ValidateTelegramInitData(initData, botToken string) (int64, error) {
 		return 0, fmt.Errorf("认证时间格式无效: %w", err)
 	}
 
-	now := time.Now().Unix()
+	now := util.NowBJT().Unix()
 
 	// 检查时间戳是否在未来（超过允许的时钟偏移）
 	// 防止攻击者使用未来的时间戳绕过过期检查

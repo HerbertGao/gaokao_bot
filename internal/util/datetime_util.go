@@ -6,6 +6,25 @@ import (
 	"time"
 )
 
+// bjtLocation 北京时间时区（UTC+8）
+// 使用包级变量缓存，避免重复加载
+var bjtLocation *time.Location
+
+func init() {
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		// 如果无法加载时区（罕见情况，如系统缺少 tzdata），使用固定偏移量
+		loc = time.FixedZone("BJT", 8*3600)
+	}
+	bjtLocation = loc
+}
+
+// NowBJT 返回当前北京时间（UTC+8）
+// 用于高考倒计时等需要明确使用北京时间的场景
+func NowBJT() time.Time {
+	return time.Now().In(bjtLocation)
+}
+
 // FormatNormal 格式化为标准格式
 func FormatNormal(t time.Time) string {
 	return t.Format("2006-01-02 15:04:05")

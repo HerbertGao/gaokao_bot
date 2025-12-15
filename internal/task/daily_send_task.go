@@ -68,7 +68,7 @@ func (t *DailySendTask) Stop() {
 // execute 执行任务
 func (t *DailySendTask) execute() {
 	// 获取当前时间（用于判断是否发送）
-	now := time.Now()
+	now := util.NowBJT()
 
 	// 获取符合条件的考试
 	exams, err := t.examDateService.GetExamsInRange(now)
