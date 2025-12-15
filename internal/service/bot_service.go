@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 	"unicode/utf8"
 
+	"github.com/herbertgao/gaokao_bot/internal/util"
 	"github.com/herbertgao/gaokao_bot/pkg/constant"
 	"github.com/mymmrac/telego"
 	"github.com/mymmrac/telego/telegoutil"
@@ -150,6 +152,30 @@ func (s *BotService) handleCommand(msg *telego.Message) {
 
 // handleDebugCommand 处理 debug 命令
 func (s *BotService) handleDebugCommand(msg *telego.Message) {
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+	defer cancel()
+
+	// 检查是否为私聊
+	if !util.IsUserChat(&msg.Chat) {
+		// 群组中，提示用户私聊 bot
+		botUsername := s.getBotUsername()
+		text := fmt.Sprintf("此命令仅支持在私聊中使用，请点击 @%s 私聊 bot 后使用 /debug 命令", botUsername)
+
+		sentMsg, err := s.bot.SendMessage(ctx, telegoutil.Message(
+			telegoutil.ID(msg.Chat.ID),
+			text,
+		))
+
+		if err != nil {
+			s.logger.Errorf("发送群组提示消息失败: %s", getContextErrorMessage(err))
+		} else if s.logger.Level >= logrus.DebugLevel {
+			s.logger.Debugf("[Telegram] -> Sent group hint to Chat %d (MsgID: %d)",
+				msg.Chat.ID,
+				sentMsg.MessageID)
+		}
+		return
+	}
+
 	// 构建带 debug=1 参数的 URL
 	debugURL := s.miniAppURL + "?debug=1"
 
@@ -166,9 +192,6 @@ func (s *BotService) handleDebugCommand(msg *telego.Message) {
 	}
 
 	// 发送带按钮的消息
-	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
-	defer cancel()
-
 	sentMsg, err := s.bot.SendMessage(ctx, &telego.SendMessageParams{
 		ChatID:      telegoutil.ID(msg.Chat.ID),
 		Text:        "点击下方按钮打开调试模式的小程序",
@@ -187,6 +210,30 @@ func (s *BotService) handleDebugCommand(msg *telego.Message) {
 
 // handleTemplateCommand 处理 template 命令
 func (s *BotService) handleTemplateCommand(msg *telego.Message) {
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+	defer cancel()
+
+	// 检查是否为私聊
+	if !util.IsUserChat(&msg.Chat) {
+		// 群组中，提示用户私聊 bot
+		botUsername := s.getBotUsername()
+		text := fmt.Sprintf("此命令仅支持在私聊中使用，请点击 @%s 私聊 bot 后使用 /template 命令", botUsername)
+
+		sentMsg, err := s.bot.SendMessage(ctx, telegoutil.Message(
+			telegoutil.ID(msg.Chat.ID),
+			text,
+		))
+
+		if err != nil {
+			s.logger.Errorf("发送群组提示消息失败: %s", getContextErrorMessage(err))
+		} else if s.logger.Level >= logrus.DebugLevel {
+			s.logger.Debugf("[Telegram] -> Sent group hint to Chat %d (MsgID: %d)",
+				msg.Chat.ID,
+				sentMsg.MessageID)
+		}
+		return
+	}
+
 	// 创建 Web App 按钮（使用小程序主页URL）
 	keyboard := &telego.InlineKeyboardMarkup{
 		InlineKeyboard: [][]telego.InlineKeyboardButton{
@@ -200,9 +247,6 @@ func (s *BotService) handleTemplateCommand(msg *telego.Message) {
 	}
 
 	// 发送带按钮的消息
-	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
-	defer cancel()
-
 	sentMsg, err := s.bot.SendMessage(ctx, &telego.SendMessageParams{
 		ChatID:      telegoutil.ID(msg.Chat.ID),
 		Text:        "点击下方按钮打开小程序配置你的自定义模板",
@@ -245,4 +289,18 @@ func getContextErrorMessage(err error) string {
 	}
 
 	return err.Error()
+}
+
+// getBotUsername 获取 bot 的用户名
+func (s *BotService) getBotUsername() string {
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+	defer cancel()
+
+	me, err := s.bot.GetMe(ctx)
+	if err != nil {
+		s.logger.Errorf("获取 bot 信息失败: %s", getContextErrorMessage(err))
+		return "gaokao_bot" // 返回默认值
+	}
+
+	return me.Username
 }
