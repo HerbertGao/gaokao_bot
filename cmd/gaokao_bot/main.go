@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,11 +30,11 @@ func main() {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		// 如果无法加载时区（罕见情况，如系统缺少 tzdata），使用固定偏移量
-		log.Printf("警告: 无法加载 Asia/Shanghai 时区: %v，使用 UTC+8 固定偏移量", err)
+		fmt.Fprintf(os.Stderr, "警告: 无法加载 Asia/Shanghai 时区: %v，使用 UTC+8 固定偏移量\n", err)
 		loc = time.FixedZone("BJT", 8*3600)
 	}
 	time.Local = loc
-	log.Printf("全局时区已设置为: %s", time.Local.String())
+	fmt.Printf("全局时区已设置为: %s\n", time.Local.String())
 
 	// 解析命令行参数
 	env := flag.String("env", "dev", "Environment: dev, prod")
@@ -62,7 +61,8 @@ func main() {
 	// 加载配置
 	cfg, err := config.Load(*env)
 	if err != nil {
-		log.Fatalf("加载配置失败: %v", err)
+		fmt.Fprintf(os.Stderr, "加载配置失败: %v\n", err)
+		os.Exit(1)
 	}
 
 	// 初始化日志
