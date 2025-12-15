@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+const (
+	// RoundingThresholdSeconds 时间标准化的四舍五入阈值（秒）
+	// 当秒数 >= 此阈值时，进位到下一分钟；否则保持当前分钟
+	RoundingThresholdSeconds = 30
+)
+
 // bjtLocation 北京时间时区（UTC+8）
 // 使用包级变量缓存，避免重复加载
 var bjtLocation *time.Location
@@ -31,10 +37,10 @@ func FormatNormal(t time.Time) string {
 }
 
 // NormalizeToMinute 标准化时间到最近的整分钟
-// 四舍五入：秒 >= 30 进位到下一分钟，< 30 保持当前分钟
+// 四舍五入：秒 >= RoundingThresholdSeconds 进位到下一分钟，< RoundingThresholdSeconds 保持当前分钟
 // 用于定时任务的倒计时显示，避免出现"3天23小时59分钟59秒"等情况
 func NormalizeToMinute(t time.Time) time.Time {
-	if t.Second() >= 30 {
+	if t.Second() >= RoundingThresholdSeconds {
 		t = t.Add(time.Minute)
 	}
 	// 截断到整分钟
