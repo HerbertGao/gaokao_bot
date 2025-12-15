@@ -38,7 +38,8 @@ func NewDailySendTask(
 	logger *logrus.Logger,
 ) *DailySendTask {
 	return &DailySendTask{
-		cron:                cron.New(cron.WithSeconds()),
+		// 使用北京时区初始化 cron，确保定时任务与 shouldSend() 的时区判断一致
+		cron:                cron.New(cron.WithSeconds(), cron.WithLocation(util.GetBJTLocation())),
 		bot:                 bot,
 		examDateService:     examDateService,
 		userTemplateService: userTemplateService,
@@ -67,7 +68,8 @@ func (t *DailySendTask) Stop() {
 
 // execute 执行任务
 func (t *DailySendTask) execute() {
-	now := time.Now()
+	// 获取当前时间（用于判断是否发送）
+	now := util.NowBJT()
 
 	// 获取符合条件的考试
 	exams, err := t.examDateService.GetExamsInRange(now)
@@ -97,8 +99,11 @@ func (t *DailySendTask) execute() {
 			templateContent = template.TemplateContent
 		}
 
-		// 生成倒计时消息
-		message := util.GetCountDownString(&exam, templateContent, now)
+		// 时间标准化：仅用于倒计时显示，防止出现"3天23小时59分59秒"等情况
+		normalizedNow := util.NormalizeToMinute(now)
+
+		// 生成倒计时消息（使用标准化后的时间）
+		message := util.GetCountDownString(&exam, templateContent, normalizedNow)
 
 		// 获取发送目标
 		chats, err := t.sendChatService.GetAll()
@@ -145,8 +150,9 @@ func (t *DailySendTask) shouldSend(exam model.ExamDate, now time.Time) bool {
 		return true
 	}
 
-	// 距离考试 > 1 天，仅在9:00发送
-	if hours > 24 && now.Hour() == 9 && now.Minute() == 0 {
+	// 距离考试 > 1 天，仅在 9:00 发送
+	// 允许 1 分钟的时间窗口（9:00-9:01），防止 cron 延迟导致错过发送
+	if hours > 24 && now.Hour() == 9 && now.Minute() <= 1 {
 		return true
 	}
 

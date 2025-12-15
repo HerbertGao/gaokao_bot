@@ -6,6 +6,7 @@ import (
 
 	"github.com/herbertgao/gaokao_bot/internal/model"
 	"github.com/herbertgao/gaokao_bot/internal/repository"
+	"github.com/herbertgao/gaokao_bot/internal/util"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -63,16 +64,17 @@ func TestExamDateService_GetExamByYear(t *testing.T) {
 	service, db := setupExamDateTestService(t)
 
 	year := 2026
+	bjtZone := util.GetBJTLocation()
 
 	db.Create(&model.ExamDate{
 		ID:                1,
 		ExamYear:          year,
 		ExamDesc:          "2026年高考",
 		ShortDesc:         "2026高考",
-		ExamBeginDate:     time.Date(year, 6, 7, 9, 0, 0, 0, time.UTC),
-		ExamEndDate:       time.Date(year, 6, 10, 17, 0, 0, 0, time.UTC),
-		ExamYearBeginDate: time.Date(year-1, 6, 10, 17, 0, 0, 0, time.UTC),
-		ExamYearEndDate:   time.Date(year, 6, 10, 17, 0, 0, 0, time.UTC),
+		ExamBeginDate:     time.Date(year, 6, 7, 9, 0, 0, 0, bjtZone),
+		ExamEndDate:       time.Date(year, 6, 10, 17, 0, 0, 0, bjtZone),
+		ExamYearBeginDate: time.Date(year-1, 6, 10, 17, 0, 0, 0, bjtZone),
+		ExamYearEndDate:   time.Date(year, 6, 10, 17, 0, 0, 0, bjtZone),
 		IsDelete:          false,
 	})
 

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/herbertgao/gaokao_bot/internal/util"
 )
 
 // RateLimiter 速率限制器
@@ -109,13 +110,13 @@ func (rl *RateLimiter) getVisitor(key string) *visitor {
 		if len(rl.visitors) >= rl.maxVisitors {
 			// 返回一个临时的、tokens 为 0 的访客，这会导致请求被限流
 			return &visitor{
-				lastSeen: time.Now(),
+				lastSeen: util.NowBJT(),
 				tokens:   0,
 			}
 		}
 
 		v = &visitor{
-			lastSeen: time.Now(),
+			lastSeen: util.NowBJT(),
 			tokens:   float64(rl.burst),
 		}
 		rl.visitors[key] = v
@@ -147,7 +148,7 @@ func (rl *RateLimiter) allow(key string) bool {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	now := time.Now()
+	now := util.NowBJT()
 	elapsed := now.Sub(v.lastSeen).Seconds()
 	v.lastSeen = now
 

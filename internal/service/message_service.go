@@ -3,7 +3,6 @@ package service
 import (
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/herbertgao/gaokao_bot/internal/model"
 	"github.com/herbertgao/gaokao_bot/internal/util"
@@ -34,7 +33,7 @@ func NewMessageService(
 
 // GetCountDownMessage 获取倒计时消息
 func (s *MessageService) GetCountDownMessage(msg *telego.Message) (string, error) {
-	now := time.Now()
+	now := util.NowBJT()
 	text := util.GetTextByMessage(msg)
 
 	var examList []model.ExamDate

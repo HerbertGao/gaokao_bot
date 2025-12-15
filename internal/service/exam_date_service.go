@@ -5,6 +5,7 @@ import (
 
 	"github.com/herbertgao/gaokao_bot/internal/model"
 	"github.com/herbertgao/gaokao_bot/internal/repository"
+	"github.com/herbertgao/gaokao_bot/internal/util"
 )
 
 // ExamDateService 考试日期服务
@@ -29,7 +30,7 @@ func (s *ExamDateService) GetExamByYear(year int) ([]model.ExamDate, error) {
 
 // GetNextExamDate 获取下一个高考日期
 func (s *ExamDateService) GetNextExamDate() (*model.ExamDate, error) {
-	now := time.Now()
+	now := util.NowBJT()
 	exams, err := s.repo.GetExamsInRange(now)
 	if err != nil {
 		return nil, err

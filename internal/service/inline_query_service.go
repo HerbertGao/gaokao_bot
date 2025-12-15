@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/herbertgao/gaokao_bot/internal/model"
 	"github.com/herbertgao/gaokao_bot/internal/util"
@@ -34,7 +33,7 @@ func NewInlineQueryService(
 
 // GetInlineQueryResults 获取内联查询结果
 func (s *InlineQueryService) GetInlineQueryResults(query *telego.InlineQuery) []telego.InlineQueryResult {
-	now := time.Now()
+	now := util.NowBJT()
 
 	var examList []model.ExamDate
 	var err error
