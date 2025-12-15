@@ -134,10 +134,13 @@ func (s *BotService) handleCommand(msg *telego.Message) {
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
 	defer cancel()
 
-	sentMsg, err := s.bot.SendMessage(ctx, telegoutil.Message(
-		telegoutil.ID(msg.Chat.ID),
-		response,
-	))
+	sentMsg, err := s.bot.SendMessage(ctx, &telego.SendMessageParams{
+		ChatID: telegoutil.ID(msg.Chat.ID),
+		Text:   response,
+		ReplyParameters: &telego.ReplyParameters{
+			MessageID: msg.MessageID,
+		},
+	})
 
 	if err != nil {
 		s.logger.Errorf("发送消息失败: %s", getContextErrorMessage(err))
@@ -161,10 +164,13 @@ func (s *BotService) handleDebugCommand(msg *telego.Message) {
 		botUsername := s.getBotUsername()
 		text := fmt.Sprintf("此命令仅支持在私聊中使用，请点击 @%s 私聊 bot 后使用 /debug 命令", botUsername)
 
-		sentMsg, err := s.bot.SendMessage(ctx, telegoutil.Message(
-			telegoutil.ID(msg.Chat.ID),
-			text,
-		))
+		sentMsg, err := s.bot.SendMessage(ctx, &telego.SendMessageParams{
+			ChatID: telegoutil.ID(msg.Chat.ID),
+			Text:   text,
+			ReplyParameters: &telego.ReplyParameters{
+				MessageID: msg.MessageID,
+			},
+		})
 
 		if err != nil {
 			s.logger.Errorf("发送群组提示消息失败: %s", getContextErrorMessage(err))
@@ -196,6 +202,9 @@ func (s *BotService) handleDebugCommand(msg *telego.Message) {
 		ChatID:      telegoutil.ID(msg.Chat.ID),
 		Text:        "点击下方按钮打开调试模式的小程序",
 		ReplyMarkup: keyboard,
+		ReplyParameters: &telego.ReplyParameters{
+			MessageID: msg.MessageID,
+		},
 	})
 
 	if err != nil {
@@ -219,10 +228,13 @@ func (s *BotService) handleTemplateCommand(msg *telego.Message) {
 		botUsername := s.getBotUsername()
 		text := fmt.Sprintf("此命令仅支持在私聊中使用，请点击 @%s 私聊 bot 后使用 /template 命令", botUsername)
 
-		sentMsg, err := s.bot.SendMessage(ctx, telegoutil.Message(
-			telegoutil.ID(msg.Chat.ID),
-			text,
-		))
+		sentMsg, err := s.bot.SendMessage(ctx, &telego.SendMessageParams{
+			ChatID: telegoutil.ID(msg.Chat.ID),
+			Text:   text,
+			ReplyParameters: &telego.ReplyParameters{
+				MessageID: msg.MessageID,
+			},
+		})
 
 		if err != nil {
 			s.logger.Errorf("发送群组提示消息失败: %s", getContextErrorMessage(err))
@@ -251,6 +263,9 @@ func (s *BotService) handleTemplateCommand(msg *telego.Message) {
 		ChatID:      telegoutil.ID(msg.Chat.ID),
 		Text:        "点击下方按钮打开小程序配置你的自定义模板",
 		ReplyMarkup: keyboard,
+		ReplyParameters: &telego.ReplyParameters{
+			MessageID: msg.MessageID,
+		},
 	})
 
 	if err != nil {
