@@ -35,6 +35,9 @@ func TestDailySendTask_ShouldSend(t *testing.T) {
 
 	task := NewDailySendTask(nil, nil, nil, nil, logger)
 
+	// 使用北京时区（与生产代码保持一致）
+	bjtZone := util.GetBJTLocation()
+
 	tests := []struct {
 		name        string
 		examDate    time.Time
@@ -43,74 +46,74 @@ func TestDailySendTask_ShouldSend(t *testing.T) {
 	}{
 		{
 			name:        "24小时内，应该发送",
-			examDate:    time.Date(2025, 6, 7, 10, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 1, 0, 0, 0, time.UTC), // 距离9小时
+			examDate:    time.Date(2025, 6, 7, 10, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 1, 0, 0, 0, bjtZone), // 距离9小时
 			want:        true,
 		},
 		{
 			name:        "12小时内，应该发送",
-			examDate:    time.Date(2025, 6, 7, 21, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 10, 0, 0, 0, time.UTC), // 距离11小时
+			examDate:    time.Date(2025, 6, 7, 21, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 10, 0, 0, 0, bjtZone), // 距离11小时
 			want:        true,
 		},
 		{
 			name:        "1小时内，应该发送",
-			examDate:    time.Date(2025, 6, 7, 10, 30, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 10, 0, 0, 0, time.UTC), // 距离30分钟
+			examDate:    time.Date(2025, 6, 7, 10, 30, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 10, 0, 0, 0, bjtZone), // 距离30分钟
 			want:        true,
 		},
 		{
 			name:        "超过24小时，9:00应该发送",
-			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 9, 0, 0, 0, time.UTC), // 距离3天，当前时间9:00
+			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone), // 距离3天，当前时间9:00
 			want:        true,
 		},
 		{
 			name:        "超过24小时，非9:00不发送",
-			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 10, 0, 0, 0, time.UTC), // 距离3天，当前时间10:00
+			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 10, 0, 0, 0, bjtZone), // 距离3天，当前时间10:00
 			want:        false,
 		},
 		{
 			name:        "超过24小时，9:01应该发送（时间窗口容错）",
-			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 9, 1, 0, 0, time.UTC), // 距离3天，当前时间9:01
+			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 9, 1, 0, 0, bjtZone), // 距离3天，当前时间9:01
 			want:        true,
 		},
 		{
 			name:        "超过24小时，9:02不发送（超出时间窗口）",
-			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 9, 2, 0, 0, time.UTC), // 距离3天，当前时间9:02
+			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 9, 2, 0, 0, bjtZone), // 距离3天，当前时间9:02
 			want:        false,
 		},
 		{
 			name:        "考试已过，不发送",
-			examDate:    time.Date(2025, 6, 7, 10, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 11, 0, 0, 0, time.UTC), // 考试过去1小时
+			examDate:    time.Date(2025, 6, 7, 10, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 11, 0, 0, 0, bjtZone), // 考试过去1小时
 			want:        false,
 		},
 		{
 			name:        "刚好24小时，应该发送",
-			examDate:    time.Date(2025, 6, 8, 10, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 10, 0, 0, 0, time.UTC), // 刚好24小时
+			examDate:    time.Date(2025, 6, 8, 10, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 10, 0, 0, 0, bjtZone), // 刚好24小时
 			want:        true,
 		},
 		{
 			name:        "刚好超过24小时，非9:00不发送",
-			examDate:    time.Date(2025, 6, 8, 10, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 9, 59, 0, 0, time.UTC), // 略超过24小时
+			examDate:    time.Date(2025, 6, 8, 10, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 9, 59, 0, 0, bjtZone), // 略超过24小时
 			want:        false,
 		},
 		{
 			name:        "超过24小时，9:00:35应该发送（Bug修复：时间标准化不影响判断）",
-			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 9, 0, 35, 0, time.UTC), // 9:00:35，秒>=30会标准化为9:01
+			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 9, 0, 35, 0, bjtZone), // 9:00:35，秒>=30会标准化为9:01
 			want:        true, // 应该发送，因为 shouldSend 使用原始时间判断
 		},
 		{
 			name:        "超过24小时，9:00:59应该发送（Bug修复：时间标准化不影响判断）",
-			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, time.UTC),
-			currentTime: time.Date(2025, 6, 7, 9, 0, 59, 0, time.UTC), // 9:00:59，秒>=30会标准化为9:01
+			examDate:    time.Date(2025, 6, 10, 10, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 9, 0, 59, 0, bjtZone), // 9:00:59，秒>=30会标准化为9:01
 			want:        true, // 应该发送，因为 shouldSend 使用原始时间判断
 		},
 	}
