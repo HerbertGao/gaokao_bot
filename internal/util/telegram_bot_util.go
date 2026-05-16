@@ -2,6 +2,7 @@ package util
 
 import (
 	"strings"
+	"unicode"
 
 	"github.com/mymmrac/telego"
 )
@@ -30,6 +31,28 @@ func GetTextByMessage(msg *telego.Message) string {
 	}
 
 	return strings.TrimSpace(text)
+}
+
+// GetGuestMessageArg 从 Guest 消息中提取参数文本。
+// 仅当消息以 @提及 开头时才剥离首个 @token 并返回其后的参数；
+// 回复式召唤（文本不以 @ 开头）按无参数处理，返回空字符串。
+// 提及与参数之间支持任意空白分隔（半角/全角空格、换行等）。
+func GetGuestMessageArg(msg *telego.Message) string {
+	if msg == nil {
+		return ""
+	}
+
+	text := strings.TrimSpace(msg.Text)
+	if !strings.HasPrefix(text, "@") {
+		return ""
+	}
+
+	idx := strings.IndexFunc(text, unicode.IsSpace)
+	if idx < 0 {
+		return ""
+	}
+
+	return strings.TrimSpace(text[idx:])
 }
 
 // RemoveFirst 删除第一个指定字符

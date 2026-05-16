@@ -94,6 +94,45 @@ func (s *BotService) HandleInlineQuery(bot *telego.Bot, query *telego.InlineQuer
 	}
 }
 
+// HandleGuestMessage 处理 Guest 模式消息
+// Bot 在非成员聊天中被 @提及或被回复时收到，仅以默认模板的倒计时应答一次。
+func (s *BotService) HandleGuestMessage(bot *telego.Bot, msg *telego.Message) {
+	if msg == nil || msg.GuestQueryID == "" {
+		return
+	}
+
+	arg := util.GetGuestMessageArg(msg)
+	text, err := s.messageService.BuildCountdownText(arg, util.NowBJT())
+	if err != nil {
+		s.logger.Errorf("生成 Guest 倒计时失败: %v", err)
+		text = "处理请求时出错，请稍后重试"
+	}
+
+	result := &telego.InlineQueryResultArticle{
+		Type:  telego.ResultTypeArticle,
+		ID:    "guest_countdown",
+		Title: "高考倒计时",
+		InputMessageContent: &telego.InputTextMessageContent{
+			MessageText: text,
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout)
+	defer cancel()
+
+	_, err = s.bot.AnswerGuestQuery(ctx, &telego.AnswerGuestQueryParams{
+		GuestQueryID: msg.GuestQueryID,
+		Result:       result,
+	})
+	if err != nil {
+		s.logger.Errorf("回复 Guest 查询失败: %s", getContextErrorMessage(err))
+	} else if s.logger.Level >= logrus.DebugLevel {
+		s.logger.Debugf("[Telegram] -> Answered guest query (ID: %s): %s",
+			msg.GuestQueryID,
+			truncateString(text, 100))
+	}
+}
+
 // handleCommand 处理命令
 func (s *BotService) handleCommand(msg *telego.Message) {
 	// 提取命令

@@ -152,6 +152,69 @@ func TestGetTextByMessage(t *testing.T) {
 	}
 }
 
+func TestGetGuestMessageArg(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  *telego.Message
+		want string
+	}{
+		{
+			name: "Nil message",
+			msg:  nil,
+			want: "",
+		},
+		{
+			name: "Mention only",
+			msg:  &telego.Message{Text: "@gaokao_bot"},
+			want: "",
+		},
+		{
+			name: "Mention with year argument",
+			msg:  &telego.Message{Text: "@gaokao_bot 2026"},
+			want: "2026",
+		},
+		{
+			name: "Mention with extra spaces",
+			msg:  &telego.Message{Text: "  @gaokao_bot   2026  "},
+			want: "2026",
+		},
+		{
+			name: "Mention with newline separator",
+			msg:  &telego.Message{Text: "@gaokao_bot\n2026"},
+			want: "2026",
+		},
+		{
+			name: "Mention with full-width space separator",
+			msg:  &telego.Message{Text: "@gaokao_bot　2026"},
+			want: "2026",
+		},
+		{
+			name: "Mention with non-numeric argument",
+			msg:  &telego.Message{Text: "@gaokao_bot 查询"},
+			want: "查询",
+		},
+		{
+			name: "Plain text without mention (reply-style)",
+			msg:  &telego.Message{Text: "请问倒计时"},
+			want: "",
+		},
+		{
+			name: "Empty text",
+			msg:  &telego.Message{Text: ""},
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetGuestMessageArg(tt.msg)
+			if got != tt.want {
+				t.Errorf("GetGuestMessageArg() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRemoveFirst(t *testing.T) {
 	tests := []struct {
 		name string

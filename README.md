@@ -16,8 +16,15 @@
 ## Features
 - 倒计时查询 - 发送命令或 Inline Query 获取高考倒计时
 - 定时推送 - 自动推送倒计时到指定群组
+- Guest 模式 - 在 Bot 非成员的群聊/私聊中被 @提及或回复时应答默认倒计时
 - Mini App - [可视化管理倒计时模板](https://github.com/HerbertGao/gaokao_bot_mini_app)
 - 多环境支持 - 开发、测试、生产环境配置分离
+
+### Guest 模式
+
+开启后，用户在任意聊天中 @提及 Bot（可附带年份参数，如 `@gaokao_bot 2026`）或回复 Bot 的消息即可获取默认模板倒计时，无需将 Bot 加入该聊天。
+
+Guest 模式需在 [BotFather](https://t.me/BotFather) 的 Mini App（`/mybots` → 选择 Bot → Bot Settings）中开启 **Guest Mode** 开关后生效，代码侧无需额外配置。
 
 ## Quick Start
 

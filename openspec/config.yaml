@@ -1,0 +1,56 @@
+schema: spec-driven
+
+# 项目上下文：在创建工件时向 AI 显示此信息。
+context: |
+  领域：高考倒计时 Telegram Bot（@gaokao_bot）。用户通过命令或 Inline Query
+  获取距离高考的倒计时，并支持定时推送到群组、自定义倒计时模板（配套 Mini App
+  可视化管理：HerbertGao/gaokao_bot_mini_app）。本仓库是对 Java 原项目的完整
+  Go 复刻。
+
+  技术栈：
+  - 语言：Go 1.25
+  - Telegram SDK：mymmrac/telego
+  - HTTP 框架：gin（提供 Mini App 后端 API）
+  - 数据库：MySQL 8，ORM 用 GORM
+  - 定时任务：robfig/cron
+  - 日志：logrus
+  - ID 生成：bwmarrin/snowflake
+
+  分层架构（cmd 入口 → internal 分层 → pkg 常量）：
+  - cmd/gaokao_bot/main.go    程序入口，按 -env 加载配置
+  - internal/config           环境配置加载（dev / test / prod 分离，基于 .env）
+  - internal/bot              telego Bot 初始化与生命周期
+  - internal/api              gin 路由（Mini App 后端）
+  - internal/handler          HTTP handler（如 template_handler）
+  - internal/middleware       cors / rate_limit / telegram_auth
+  - internal/service          业务逻辑（bot / message / inline_query /
+                              exam_date / send_chat / user_template）
+  - internal/repository       数据访问层（GORM repo）
+  - internal/model            GORM 模型（exam_date / send_chat / user_template）
+  - internal/task             定时任务（daily_send_task，BJT/UTC+8 整分钟）
+  - internal/updater          Telegram update 分发
+  - internal/util             工具（datetime_util 等）
+  - internal/version          版本信息（可通过 ldflags 覆盖）
+  - pkg/constant              共享常量（exam / command / template）
+
+  约定：
+  - 提交信息遵循 Conventional Commits（feat / fix / chore），描述用中文。
+  - 版本号经由 chore: bump version 提交独立管理，并自动推送 tag。
+  - 每个 .go 文件都有同目录同名 _test.go；用 `make test` 跑全部测试，
+    `make coverage` 生成覆盖率。
+  - 代码须通过 golangci-lint（启用 errcheck / govet / staticcheck / gosec /
+    revive / gocyclo 等，配置见 .golangci.yml）。
+  - 时间统一按北京时间（UTC+8）处理，定时任务对齐整分钟。
+  - 跨域来源由环境变量 CORS_ALLOWED_ORIGINS 配置，不硬编码。
+
+# 每个工件的规则：为特定工件添加自定义规则。
+rules:
+  proposal:
+    - 始终包含"非目标"（Non-Goals）部分，明确不做什么
+    - 说明对现有分层架构（service / repository / handler）的影响范围
+  tasks:
+    - 将任务分解为最多 2 小时的块
+    - 涉及代码改动的任务须同时包含对应的 _test.go 更新
+  specs:
+    - 需求用"系统应当（SHALL）"句式描述，便于追溯
+    - 区分 Bot 命令、Inline Query、Mini App API 三类入口的行为

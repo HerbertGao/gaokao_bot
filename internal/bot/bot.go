@@ -77,6 +77,29 @@ func (b *GaokaoBot) Start() error {
 	}
 	b.handler = handler
 
+	// 注册各类更新处理器
+	b.registerHandlers()
+
+	// 标记为已启动
+	b.mu.Lock()
+	b.started = true
+	b.mu.Unlock()
+
+	// 开始处理更新
+	go func() {
+		if err := b.handler.Start(); err != nil {
+			b.logger.Errorf("Handler start error: %v", err)
+		}
+		close(b.done)
+	}()
+
+	b.logger.Info("Bot started successfully")
+
+	return nil
+}
+
+// registerHandlers 在 b.handler 上注册消息、内联查询、Guest 消息处理器
+func (b *GaokaoBot) registerHandlers() {
 	// 注册消息处理器
 	b.handler.Handle(func(ctx *telegohandler.Context, update telego.Update) error {
 		if update.Message != nil {
@@ -126,22 +149,25 @@ func (b *GaokaoBot) Start() error {
 		return nil
 	}, telegohandler.AnyInlineQuery())
 
-	// 标记为已启动
-	b.mu.Lock()
-	b.started = true
-	b.mu.Unlock()
-
-	// 开始处理更新
-	go func() {
-		if err := b.handler.Start(); err != nil {
-			b.logger.Errorf("Handler start error: %v", err)
+	// 注册 Guest 消息处理器（Bot 在非成员聊天中被召唤）
+	b.handler.HandleGuestMessage(func(ctx *telegohandler.Context, message telego.Message) error {
+		// Debug 模式下打印接收到的 Guest 消息
+		if b.logger.Level >= logrus.DebugLevel {
+			username := "unknown"
+			var userID int64
+			if message.From != nil {
+				username = message.From.Username
+				userID = message.From.ID
+			}
+			b.logger.Debugf("[Telegram] <- Received guest message from @%s (ID: %d, QueryID: %s): %s",
+				username,
+				userID,
+				message.GuestQueryID,
+				message.Text)
 		}
-		close(b.done)
-	}()
-
-	b.logger.Info("Bot started successfully")
-
-	return nil
+		b.service.HandleGuestMessage(ctx.Bot(), &message)
+		return nil
+	})
 }
 
 // Stop 停止Bot

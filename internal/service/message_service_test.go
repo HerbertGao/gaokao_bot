@@ -267,3 +267,80 @@ func TestMessageService_GetCountDownMessage_MultipleExams(t *testing.T) {
 		t.Error("Expected non-empty result with multiple exams")
 	}
 }
+
+func TestMessageService_BuildCountdownText_NoArg(t *testing.T) {
+	service, db := setupMessageTestService(t)
+
+	now := time.Now()
+	futureDate := now.AddDate(1, 0, 0)
+	db.Create(&model.ExamDate{
+		ID:                1,
+		ExamYear:          futureDate.Year(),
+		ExamDesc:          "高考",
+		ShortDesc:         "高考",
+		ExamBeginDate:     futureDate,
+		ExamEndDate:       futureDate.AddDate(0, 0, 3),
+		ExamYearBeginDate: now,
+		ExamYearEndDate:   futureDate.AddDate(0, 0, 3),
+		IsDelete:          false,
+	})
+
+	result, err := service.BuildCountdownText("", now)
+	if err != nil {
+		t.Errorf("BuildCountdownText() error = %v", err)
+	}
+	if result == "" {
+		t.Error("Expected non-empty result for empty arg")
+	}
+}
+
+func TestMessageService_BuildCountdownText_WithYear(t *testing.T) {
+	service, db := setupMessageTestService(t)
+
+	year := 2026
+	db.Create(&model.ExamDate{
+		ID:                1,
+		ExamYear:          year,
+		ExamDesc:          "2026年高考",
+		ShortDesc:         "高考",
+		ExamBeginDate:     time.Date(year, 6, 7, 9, 0, 0, 0, util.GetBJTLocation()),
+		ExamEndDate:       time.Date(year, 6, 10, 17, 0, 0, 0, util.GetBJTLocation()),
+		ExamYearBeginDate: time.Date(year-1, 6, 10, 17, 0, 0, 0, util.GetBJTLocation()),
+		ExamYearEndDate:   time.Date(year, 6, 10, 17, 0, 0, 0, util.GetBJTLocation()),
+		IsDelete:          false,
+	})
+
+	result, err := service.BuildCountdownText("2026", util.NowBJT())
+	if err != nil {
+		t.Errorf("BuildCountdownText() error = %v", err)
+	}
+	if result == "" {
+		t.Error("Expected non-empty result for valid year")
+	}
+}
+
+func TestMessageService_BuildCountdownText_InvalidArg(t *testing.T) {
+	service, _ := setupMessageTestService(t)
+
+	for _, arg := range []string{"2017", "hello", "2099"} {
+		result, err := service.BuildCountdownText(arg, util.NowBJT())
+		if err != nil {
+			t.Errorf("BuildCountdownText(%q) should not error, got %v", arg, err)
+		}
+		if result != "参数暂时无法识别。" {
+			t.Errorf("BuildCountdownText(%q) = %q, want '参数暂时无法识别。'", arg, result)
+		}
+	}
+}
+
+func TestMessageService_BuildCountdownText_NoData(t *testing.T) {
+	service, _ := setupMessageTestService(t)
+
+	result, err := service.BuildCountdownText("", time.Now())
+	if err != nil {
+		t.Errorf("BuildCountdownText() error = %v", err)
+	}
+	if result != "数据库中没有可用的信息，请联系开发者。" {
+		t.Errorf("BuildCountdownText() = %q, want '数据库中没有可用的信息，请联系开发者。'", result)
+	}
+}

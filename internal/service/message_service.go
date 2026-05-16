@@ -3,6 +3,7 @@ package service
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/herbertgao/gaokao_bot/internal/model"
 	"github.com/herbertgao/gaokao_bot/internal/util"
@@ -10,6 +11,9 @@ import (
 	"github.com/mymmrac/telego"
 	"github.com/sirupsen/logrus"
 )
+
+// msgArgUnrecognized 参数无法识别时的提示文案
+const msgArgUnrecognized = "参数暂时无法识别。"
 
 // MessageService 消息处理服务
 type MessageService struct {
@@ -33,8 +37,14 @@ func NewMessageService(
 
 // GetCountDownMessage 获取倒计时消息
 func (s *MessageService) GetCountDownMessage(msg *telego.Message) (string, error) {
-	now := util.NowBJT()
-	text := util.GetTextByMessage(msg)
+	return s.BuildCountdownText(util.GetTextByMessage(msg), util.NowBJT())
+}
+
+// BuildCountdownText 根据已提取的参数文本生成倒计时消息
+// arg 为空时输出当前时间范围内的倒计时，arg 为合法考试年份时按年份查询，
+// 其余情况返回「参数暂时无法识别。」。使用默认模板，多个考试拼接为单条文本。
+func (s *MessageService) BuildCountdownText(arg string, now time.Time) (string, error) {
+	text := arg
 
 	var examList []model.ExamDate
 	var err error
@@ -48,10 +58,10 @@ func (s *MessageService) GetCountDownMessage(msg *telego.Message) (string, error
 				return "查询考试信息失败", err
 			}
 			if len(examList) == 0 {
-				return "参数暂时无法识别。", nil
+				return msgArgUnrecognized, nil
 			}
 		} else {
-			return "参数暂时无法识别。", nil
+			return msgArgUnrecognized, nil
 		}
 	} else {
 		// 没有参数时，获取当前时间范围内的所有考试
