@@ -116,6 +116,30 @@ func TestDailySendTask_ShouldSend(t *testing.T) {
 			currentTime: time.Date(2025, 6, 7, 9, 0, 59, 0, bjtZone), // 9:00:59，秒>=30会标准化为9:01
 			want:        true, // 应该发送，因为 shouldSend 使用原始时间判断
 		},
+		{
+			name:        "开考后10秒，应该发送",
+			examDate:    time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 9, 0, 10, 0, bjtZone),
+			want:        true,
+		},
+		{
+			name:        "开考后59秒，应该发送",
+			examDate:    time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 9, 0, 59, 0, bjtZone),
+			want:        true,
+		},
+		{
+			name:        "开考整点0秒，不发送",
+			examDate:    time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			want:        false,
+		},
+		{
+			name:        "开考后1分钟，已过窗不发送",
+			examDate:    time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone),
+			currentTime: time.Date(2025, 6, 7, 9, 1, 0, 0, bjtZone),
+			want:        false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -129,6 +153,64 @@ func TestDailySendTask_ShouldSend(t *testing.T) {
 				duration := tt.examDate.Sub(tt.currentTime)
 				t.Errorf("shouldSend() = %v, want %v (距离: %.2f 小时, 当前时间: %s)",
 					got, tt.want, duration.Hours(), tt.currentTime.Format("15:04"))
+			}
+		})
+	}
+}
+
+func TestDailySendTask_BuildMessage(t *testing.T) {
+	logger := logrus.New()
+	logger.SetLevel(logrus.ErrorLevel)
+
+	task := NewDailySendTask(nil, nil, nil, nil, logger)
+	bjtZone := util.GetBJTLocation()
+
+	examBegin := time.Date(2025, 6, 7, 9, 0, 0, 0, bjtZone)
+	examDesc := "2025年全国普通高等学校招生统一考试"
+	templateContent := "现在距离{exam}还有{time}"
+
+	tests := []struct {
+		name            string
+		now             time.Time
+		want            string
+		wantContains    []string
+		wantNotContains []string
+	}{
+		{
+			name: "开考后10秒，返回开始了文案",
+			now:  time.Date(2025, 6, 7, 9, 0, 10, 0, bjtZone),
+			want: examDesc + "开始了！",
+		},
+		{
+			name:         "开考前1小时，返回倒计时文案",
+			now:          time.Date(2025, 6, 7, 8, 0, 0, 0, bjtZone),
+			wantContains: []string{examDesc, "1小时"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			exam := &model.ExamDate{
+				ExamDesc:      examDesc,
+				ExamBeginDate: examBegin,
+				ExamEndDate:   time.Date(2025, 6, 10, 17, 0, 0, 0, bjtZone),
+			}
+			normalizedNow := util.NormalizeToMinute(tt.now)
+
+			got := task.buildMessage(exam, tt.now, normalizedNow, templateContent)
+
+			if tt.want != "" && got != tt.want {
+				t.Errorf("buildMessage() = %q, want %q", got, tt.want)
+			}
+			for _, substr := range tt.wantContains {
+				if !strings.Contains(got, substr) {
+					t.Errorf("buildMessage() = %q, should contain %q", got, substr)
+				}
+			}
+			for _, substr := range tt.wantNotContains {
+				if strings.Contains(got, substr) {
+					t.Errorf("buildMessage() = %q, should not contain %q", got, substr)
+				}
 			}
 		})
 	}
