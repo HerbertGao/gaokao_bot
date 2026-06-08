@@ -85,6 +85,43 @@ func TestExamDateRepository_GetExamsInRange(t *testing.T) {
 	}
 }
 
+func TestExamDateRepository_GetExamsInRange_ExamBeginBoundary(t *testing.T) {
+	db := setupExamDateTestDB(t)
+	repo := NewExamDateRepository(db)
+
+	bjtZone := util.GetBJTLocation()
+
+	exam := &model.ExamDate{
+		ID:                1,
+		ExamYear:          2026,
+		ExamDesc:          "2026年高考",
+		ShortDesc:         "高考",
+		ExamBeginDate:     time.Date(2026, 6, 7, 9, 0, 0, 0, bjtZone),
+		ExamEndDate:       time.Date(2026, 6, 10, 17, 0, 0, 0, bjtZone),
+		ExamYearBeginDate: time.Date(2025, 6, 10, 17, 0, 0, 0, bjtZone),
+		ExamYearEndDate:   time.Date(2026, 6, 10, 17, 0, 0, 0, bjtZone),
+		IsDelete:          false,
+	}
+	db.Create(exam)
+
+	now := time.Date(2026, 6, 7, 9, 0, 0, 0, bjtZone)
+	result, err := repo.GetExamsInRange(now)
+	if err != nil {
+		t.Fatalf("GetExamsInRange() error = %v", err)
+	}
+
+	if len(result) != 1 {
+		t.Fatalf("Expected 1 exam at exam begin boundary, got %d", len(result))
+	}
+
+	if result[0].ID != exam.ID {
+		t.Errorf("Expected exam ID %d, got %d", exam.ID, result[0].ID)
+	}
+	if result[0].ExamDesc != exam.ExamDesc {
+		t.Errorf("ExamDesc = %q, want %q", result[0].ExamDesc, exam.ExamDesc)
+	}
+}
+
 func TestExamDateRepository_GetExamByYear(t *testing.T) {
 	db := setupExamDateTestDB(t)
 	repo := NewExamDateRepository(db)

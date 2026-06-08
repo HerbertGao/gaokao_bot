@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -102,8 +103,12 @@ func (t *DailySendTask) execute() {
 		// 时间标准化：仅用于倒计时显示，防止出现"3天23小时59分59秒"等情况
 		normalizedNow := util.NormalizeToMinute(now)
 
-		// 生成倒计时消息（使用标准化后的时间）
-		message := util.GetCountDownString(&exam, templateContent, normalizedNow)
+		if util.IsExamBeginTime(&exam, now) {
+			t.logger.Infof("开考推送已触发: exam=%s now=%v begin=%v offset=%v",
+				exam.ExamDesc, now, exam.ExamBeginDate, now.Sub(exam.ExamBeginDate))
+		}
+
+		message := t.buildMessage(&exam, now, normalizedNow, templateContent)
 
 		// 获取发送目标
 		chats, err := t.sendChatService.GetAll()
@@ -140,8 +145,19 @@ func (t *DailySendTask) execute() {
 	}
 }
 
+func (t *DailySendTask) buildMessage(exam *model.ExamDate, now, normalizedNow time.Time, templateContent string) string {
+	if util.IsExamBeginTime(exam, now) {
+		return fmt.Sprintf("%s开始了！", exam.ExamDesc)
+	}
+	return util.GetCountDownString(exam, templateContent, normalizedNow)
+}
+
 // shouldSend 判断是否应该发送
 func (t *DailySendTask) shouldSend(exam model.ExamDate, now time.Time) bool {
+	if util.IsExamBeginTime(&exam, now) {
+		return true
+	}
+
 	duration := exam.ExamBeginDate.Sub(now)
 	hours := duration.Hours()
 
